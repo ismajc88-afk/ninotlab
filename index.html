@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ninot Lab | 3D Management</title>
+    <meta name="description" content="ERP para negocios de impresión 3D: diseños, clientes, finanzas e inventario.">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&display=swap" rel="stylesheet">
+    <!-- FontAwesome via free CDN (no CORS issues) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+<body>
+<div class="app-container">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon"></div>
+            <h1>Ninot<span>Lab</span></h1>
+        </div>
+        <nav>
+            <button class="nav-item active" data-tab="dashboard"><i class="fas fa-chart-line"></i> Dashboard</button>
+            <button class="nav-item" data-tab="projects"><i class="fas fa-layer-group"></i> Proyectos</button>
+            <button class="nav-item" data-tab="calculator"><i class="fas fa-calculator"></i> Calculadora</button>
+            <button class="nav-item" data-tab="designs"><i class="fas fa-cube"></i> Catálogo</button>
+            <button class="nav-item" data-tab="finance"><i class="fas fa-wallet"></i> Finanzas</button>
+            <button class="nav-item" data-tab="inventory"><i class="fas fa-boxes-stacked"></i> Inventario</button>
+            <button class="nav-item" data-tab="clients"><i class="fas fa-users"></i> Clientes</button>
+            <button class="nav-item" data-tab="profiles"><i class="fas fa-sliders"></i> Perfiles 3D</button>
+            <button class="nav-item" data-tab="settings"><i class="fas fa-cog"></i> Configuración</button>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="printer-status">
+                <span class="status-dot online"></span>
+                <span>Bambu A1 · Online</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="content">
+        <header>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button id="mobile-menu-btn" class="btn-icon" style="display: none;"><i class="fas fa-bars"></i></button>
+                <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" id="global-search" placeholder="Buscar diseños, clientes, proyectos...">
+            </div>
+            <div class="user-profile">
+                <div class="notifications"><i class="fas fa-bell"></i></div>
+                <div class="avatar">IL</div>
+            </div>
+        </header>
+
+        <!-- ── Dashboard ── -->
+        <section id="dashboard-view" class="view active">
+            <div class="view-header">
+                <div>
+                    <h2>Dashboard</h2>
+                    <p class="text-muted" id="dash-date"></p>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-icon"><i class="fas fa-euro-sign"></i></div>
+                    <div>
+                        <div class="kpi-label">Balance Neto</div>
+                        <div class="kpi-value" id="dash-balance">€0</div>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-blue">
+                    <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
+                    <div>
+                        <div class="kpi-label">Proyectos Activos</div>
+                        <div class="kpi-value" id="dash-projects">0</div>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-purple">
+                    <div class="kpi-icon"><i class="fas fa-cube"></i></div>
+                    <div>
+                        <div class="kpi-label">Diseños en Catálogo</div>
+                        <div class="kpi-value" id="dash-designs">0</div>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-orange">
+                    <div class="kpi-icon"><i class="fas fa-users"></i></div>
+                    <div>
+                        <div class="kpi-label">Clientes</div>
+                        <div class="kpi-value" id="dash-clients">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dash-grid">
+                <div class="card">
+                    <h3><i class="fas fa-video"></i> Impresora Bambu A1</h3>
+                    <div class="printer-cam">
+                        <i class="fas fa-camera"></i>
+                        <span>Cámara no conectada — se requiere integración MQTT</span>
+                    </div>
+                    <div class="printer-stats">
+                        <div class="pstat"><span class="ps-label">Estado</span><span class="ps-val ps-green">Online</span></div>
+                        <div class="pstat"><span class="ps-label">Progreso</span><span class="ps-val">68%</span></div>
+                        <div class="pstat"><span class="ps-label">Boquilla</span><span class="ps-val">220°C</span></div>
+                        <div class="pstat"><span class="ps-label">Cama</span><span class="ps-val">65°C</span></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-clock-rotate-left"></i> Últimas Transacciones</h3>
+                    <ul class="order-list" id="dash-finance-list">
+                        <li class="order-item text-muted" style="justify-content:center;">Sin datos</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3><i class="fas fa-kanban"></i> Estado de Proyectos</h3>
+                    <div id="dash-kanban-summary" style="display:flex;flex-direction:column;gap:12px;">
+                        <div class="project-summary-item">
+                            <span class="ps-dot dot-yellow"></span>
+                            <span class="flex-1">Pendientes</span>
+                            <strong id="dash-pending">0</strong>
+                        </div>
+                        <div class="project-summary-item">
+                            <span class="ps-dot dot-blue"></span>
+                            <span class="flex-1">En proceso</span>
+                            <strong id="dash-progress">0</strong>
+                        </div>
+                        <div class="project-summary-item">
+                            <span class="ps-dot dot-green"></span>
+                            <span class="flex-1">Completados</span>
+                            <strong id="dash-done">0</strong>
+                        </div>
+                    </div>
+                    <div class="kanban-bar" id="dash-kanban-bar" style="margin-top:1.5rem;"></div>
+                </div>
+
+                <div class="card" style="grid-column: span 2;">
+                    <h3><i class="fas fa-chart-line"></i> Rendimiento del Negocio (Últimos 30 días)</h3>
+                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:1rem; margin-top:1rem;">
+                        <div style="text-align:center; padding:1rem; background:rgba(16,185,129,0.05); border-radius:12px;">
+                            <span class="ps-label" style="display:block; margin-bottom:5px;">Ingresos</span>
+                            <strong style="font-size:1.5rem; color:var(--green);" id="stats-revenue">€0.00</strong>
+                        </div>
+                        <div style="text-align:center; padding:1rem; background:rgba(239,68,68,0.05); border-radius:12px;">
+                            <span class="ps-label" style="display:block; margin-bottom:5px;">Gastos</span>
+                            <strong style="font-size:1.5rem; color:var(--red);" id="stats-expenses">€0.00</strong>
+                        </div>
+                        <div style="text-align:center; padding:1rem; background:rgba(99,102,241,0.05); border-radius:12px;">
+                            <span class="ps-label" style="display:block; margin-bottom:5px;">Beneficio Neto</span>
+                            <strong style="font-size:1.5rem; color:var(--accent2);" id="stats-profit">€0.00</strong>
+                        </div>
+                        <div style="text-align:center; padding:1rem; background:rgba(168,85,247,0.05); border-radius:12px;">
+                            <span class="ps-label" style="display:block; margin-bottom:5px;">Tasa Conversión</span>
+                            <strong style="font-size:1.5rem; color:var(--purple);" id="stats-conv">0%</strong>
+                        </div>
+                    </div>
+                    <div style="margin-top:2rem; height:100px; display:flex; align-items:flex-end; gap:4px;" id="stats-mini-chart">
+                    </div>
+                </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Proyectos (Kanban) ── -->
+        <section id="projects-view" class="view">
+            <div class="view-header">
+                <h2>Proyectos y Producción</h2>
+                <button class="btn-primary" onclick="window.addProject()"><i class="fas fa-plus"></i> Nuevo Proyecto</button>
+            </div>
+
+            <!-- Drafts / Presupuestos -->
+            <div style="margin-bottom: 3rem;">
+                <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i class="fas fa-file-signature" style="color:var(--yellow)"></i> Presupuestos por Confirmar</h3>
+                <div class="designs-grid" id="drafts-container"></div>
+            </div>
+
+            <!-- Laboratorio 3D -->
+            <div style="margin-bottom: 3rem;">
+                <h3 style="margin-bottom:1.5rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-microchip" style="color:var(--accent2)"></i> Laboratorio 3D (Impresión)</h3>
+                <div class="kanban-board">
+                    <div class="kanban-column" id="kanban-pending">
+                        <h3><span class="col-dot" style="background:var(--yellow)"></span> Pendientes <span class="col-count" id="count-pending">0</span></h3>
+                        <div class="kanban-cards"></div>
+                    </div>
+                    <div class="kanban-column" id="kanban-progress">
+                        <h3><span class="col-dot" style="background:var(--blue)"></span> En proceso <span class="col-count" id="count-progress">0</span></h3>
+                        <div class="kanban-cards"></div>
+                    </div>
+                    <div class="kanban-column" id="kanban-done">
+                        <h3><span class="col-dot" style="background:var(--green)"></span> Completados <span class="col-count" id="count-done">0</span></h3>
+                        <div class="kanban-cards"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Taller de Arte -->
+            <div>
+                <h3 style="margin-bottom:1.5rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-palette" style="color:var(--purple)"></i> Taller de Arte (Pintura)</h3>
+                <div class="kanban-board">
+                    <div class="kanban-column" id="kanban-pending-paint">
+                        <h3><span class="col-dot" style="background:var(--yellow)"></span> Pendientes <span class="col-count" id="count-pending-paint">0</span></h3>
+                        <div class="kanban-cards"></div>
+                    </div>
+                    <div class="kanban-column" id="kanban-progress-paint">
+                        <h3><span class="col-dot" style="background:var(--blue)"></span> Pintando <span class="col-count" id="count-progress-paint">0</span></h3>
+                        <div class="kanban-cards"></div>
+                    </div>
+                    <div class="kanban-column" id="kanban-done-paint">
+                        <h3><span class="col-dot" style="background:var(--green)"></span> Listos <span class="col-count" id="count-done-paint">0</span></h3>
+                        <div class="kanban-cards"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="calculator-view" class="view">
+            <div class="view-header">
+                <h2>Calculadora Pro</h2>
+                <div style="display:flex; gap:10px;">
+                    <select id="calc-mode" class="form-input" style="width:auto;" onchange="window.toggleCalcMode()">
+                        <option value="3d">Impresión 3D</option>
+                        <option value="paint">Pintura / Arte</option>
+                    </select>
+                    <button class="btn-primary" onclick="window.calculate()"><i class="fas fa-play"></i> Calcular</button>
+                </div>
+            </div>
+            <div class="calc-layout">
+                <div class="card">
+                    <h3><i class="fas fa-sliders"></i> Parámetros</h3>
+                    <div class="calc-grid">
+                        <div class="input-group"><label>Peso de la pieza (g)</label><input type="number" id="calc-weight" value="200"></div>
+                        <div class="input-group"><label>Precio filamento (€/kg)</label><input type="number" id="calc-price-kg" value="22.00" step="0.01"></div>
+                        <div class="input-group"><label>Horas de impresión</label><input type="number" id="calc-hours" value="5" step="0.5"></div>
+                        <div class="input-group"><label>Potencia impresora (W)</label><input type="number" id="calc-watts" value="300"></div>
+                        <div class="input-group"><label>Coste electricidad (€/kWh)</label><input type="number" id="calc-kwh" value="0.18" step="0.01"></div>
+                        <div class="input-group"><label>Margen de beneficio (%)</label><input type="number" id="calc-margin" value="250"></div>
+                        <div class="input-group"><label>Amortización/hora (€)</label><input type="number" id="calc-wear" value="0.10" step="0.01"></div>
+                        <div class="input-group"><label>Mano de obra (€)</label><input type="number" id="calc-labor" value="0" step="0.5"></div>
+                        <div class="input-group"><label>Envío (€)</label><input type="number" id="calc-shipping" value="0" step="0.5"></div>
+                        <div class="input-group"><label>Escala (%)</label><input type="number" id="calc-scale" value="100"></div>
+                        <div class="input-group"><label>Relleno (%)</label><input type="number" id="calc-infill" value="15"></div>
+                        <div class="input-group"><label>Precio en tienda (€, para comparar)</label><input type="number" id="calc-store" value="0" step="0.5"></div>
+                        <div class="input-group">
+                            <label>Boquilla</label>
+                            <select id="calc-nozzle">
+                                <option value="0.4">0.4mm (Estándar)</option>
+                                <option value="0.6">0.6mm (Rápida)</option>
+                                <option value="0.2">0.2mm (Detalle)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="calc-paint-params" style="display:none;">
+                    <h3><i class="fas fa-palette"></i> Parámetros de Pintura</h3>
+                    <div class="calc-grid">
+                        <div class="input-group"><label>Horas de trabajo</label><input type="number" id="calc-paint-hours" value="2"></div>
+                        <div class="input-group"><label>Precio/hora (€)</label><input type="number" id="calc-paint-rate" value="15"></div>
+                        <div class="input-group"><label>Materiales (pintura, etc) (€)</label><input type="number" id="calc-paint-mats" value="5"></div>
+                        <div class="input-group"><label>Complejidad (x Factor)</label><input type="number" id="calc-paint-factor" value="1.2" step="0.1"></div>
+                    </div>
+                </div>
+                <div class="card" style="min-width:320px;">
+                    <h3><i class="fas fa-chart-pie"></i> Resultado</h3>
+                    <div class="calc-results" id="calc-results">
+                        <p class="text-muted" style="font-size:0.9rem;">Introduce los parámetros y pulsa Calcular.</p>
+                    </div>
+                    <button class="btn-primary" onclick="window.calculate()" style="width:100%;margin-top:1rem;justify-content:center;"><i class="fas fa-play"></i> Calcular Precio</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Catálogo de Diseños ── -->
+        <section id="designs-view" class="view">
+            <div class="view-header">
+                <h2>Catálogo de Diseños</h2>
+                <div style="display:flex;gap:1rem;">
+                    <select id="design-category-filter" class="form-input" style="width:200px;" onchange="window.renderDesigns()">
+                        <option value="all">Todas las Categorías</option>
+                        <option value="Ninots">Ninots Falleros</option>
+                        <option value="Llaveros">Llaveros y Merchandising</option>
+                        <option value="Trofeos">Trofeos</option>
+                        <option value="Industrial">Industrial y Prototipos</option>
+                    </select>
+                    <button class="btn-primary" onclick="window.addDesign()"><i class="fas fa-plus"></i> Nuevo Diseño</button>
+                </div>
+            </div>
+            <div class="designs-grid" id="designs-container"></div>
+        </section>
+
+        <!-- ── Finanzas ── -->
+        <section id="finance-view" class="view">
+            <div class="view-header">
+                <h2>Finanzas</h2>
+                <div class="btn-group">
+                    <button class="btn-primary" onclick="window.openFinanceModal('income')"><i class="fas fa-arrow-up"></i> Registrar Ingreso</button>
+                    <button class="btn-secondary" onclick="window.openFinanceModal('expense')"><i class="fas fa-arrow-down"></i> Registrar Gasto</button>
+                </div>
+            </div>
+            <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:2rem;">
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-icon"><i class="fas fa-trending-up"></i></div>
+                    <div><div class="kpi-label">Ingresos</div><div class="kpi-value" id="fin-income">€0</div></div>
+                </div>
+                <div class="kpi-card kpi-red">
+                    <div class="kpi-icon"><i class="fas fa-trending-down"></i></div>
+                    <div><div class="kpi-label">Gastos</div><div class="kpi-value" id="fin-expenses">€0</div></div>
+                </div>
+                <div class="kpi-card kpi-blue">
+                    <div class="kpi-icon"><i class="fas fa-scale-balanced"></i></div>
+                    <div><div class="kpi-label">Balance</div><div class="kpi-value" id="fin-balance">€0</div></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-list"></i> Historial de Transacciones</h3>
+                <div class="table-responsive">
+                    <table class="finance-table">
+                        <thead>
+                            <tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th>Importe</th></tr>
+                        </thead>
+                        <tbody id="finance-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Inventario ── -->
+        <section id="inventory-view" class="view">
+            <div class="view-header">
+                <h2>Inventario de Filamentos</h2>
+                <button class="btn-primary" onclick="window.addStock()"><i class="fas fa-plus"></i> Añadir Bobina</button>
+            </div>
+            <div class="inventory-grid" id="inventory-container"></div>
+
+            <div class="view-header" style="margin-top:2.5rem;">
+                <h2 style="font-size:1.4rem;">Simulador de Producción</h2>
+            </div>
+            <div class="card">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+                    <div class="input-group"><label>Diseño a imprimir</label><select id="sim-design-select"></select></div>
+                    <div class="input-group"><label>Bobina disponible</label><select id="sim-spool-select"></select></div>
+                </div>
+                <div id="sim-production-result" class="calc-results"></div>
+            </div>
+        </section>
+
+        <!-- ── Clientes ── -->
+        <section id="clients-view" class="view">
+            <div class="view-header">
+                <h2>Clientes</h2>
+                <button class="btn-primary" onclick="window.addClient()"><i class="fas fa-plus"></i> Nuevo Cliente</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                <div class="card">
+                    <h3><i class="fas fa-users"></i> Lista de Clientes</h3>
+                    <ul class="order-list" id="clients-list"></ul>
+                </div>
+                <div class="card" id="client-details-card" style="display:none;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
+                        <div>
+                            <h3 style="margin-bottom:0;"><i class="fas fa-user-circle"></i> <span id="detail-client-name"></span></h3>
+                            <p class="text-muted" id="detail-client-email" style="font-size:0.85rem;margin-top:4px;"></p>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <button class="btn-primary" onclick="window.newBudget()" style="padding:8px 14px;font-size:0.85rem;"><i class="fas fa-file-invoice-dollar"></i> Presupuesto</button>
+                            <button class="btn-icon" onclick="window.closeClientDetails()"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <h4 style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem;">PROYECTOS</h4>
+                    <ul class="order-list" id="client-projects-list"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Perfiles de Laminado ── -->
+        <section id="profiles-view" class="view">
+            <div class="view-header">
+                <h2>Perfiles de Laminado</h2>
+                <button class="btn-primary" onclick="window.addProfile()"><i class="fas fa-plus"></i> Nuevo Perfil</button>
+            </div>
+            <div class="table-responsive">
+                <table class="finance-table">
+                    <thead>
+                        <tr>
+                            <th>Material/Marca</th>
+                            <th>Impresora</th>
+                            <th>Temp (°C)</th>
+                            <th>Cama (°C)</th>
+                            <th>Flujo</th>
+                            <th>Retracción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="profiles-list">
+                        <!-- Generado dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ── Configuración ── -->
+        <section id="settings-view" class="view">
+            <div class="view-header">
+                <h2>Configuración del Negocio</h2>
+                <button class="btn-primary" onclick="window.saveSettings()"><i class="fas fa-save"></i> Guardar Cambios</button>
+            </div>
+            <div class="card" style="max-width: 800px; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1.5rem;"><i class="fas fa-building"></i> Datos de la Empresa (Para Presupuestos)</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="input-group">
+                        <label>Nombre del Taller / Empresa</label>
+                        <input type="text" id="set-company-name" class="form-input">
+                    </div>
+                    <div class="input-group">
+                        <label>Subtítulo / Especialidad</label>
+                        <input type="text" id="set-company-sub" class="form-input">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="input-group">
+                        <label>Email de Contacto</label>
+                        <input type="email" id="set-company-email" class="form-input">
+                    </div>
+                    <div class="input-group">
+                        <label>Teléfono de Contacto</label>
+                        <input type="text" id="set-company-phone" class="form-input">
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 1.5rem; margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;"><i class="fas fa-university"></i> Datos de Facturación / Pago</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                    <div class="input-group">
+                        <label>IBAN (Transferencias)</label>
+                        <input type="text" id="set-company-iban" class="form-input">
+                    </div>
+                    <div class="input-group">
+                        <label>Bizum / Teléfono de Pago</label>
+                        <input type="text" id="set-company-bizum" class="form-input">
+                    </div>
+                </div>
+                <div class="input-group" style="max-width: 50%;">
+                    <label>Titular de la Cuenta</label>
+                    <input type="text" id="set-company-titular" class="form-input">
+                </div>
+
+                <h3 style="margin-bottom: 1.5rem; margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;"><i class="fas fa-database"></i> Gestión de Datos (Sincronización Manual)</h3>
+                <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 1.5rem;">
+                    Como la app guarda los datos en tu navegador, puedes exportarlos a un archivo para pasarlos a otro dispositivo o guardarlos como copia de seguridad.
+                </p>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn-secondary" onclick="window.exportData()"><i class="fas fa-download"></i> Exportar Base de Datos (.json)</button>
+                    <button class="btn-secondary" onclick="document.getElementById('import-file').click()"><i class="fas fa-upload"></i> Importar Datos</button>
+                    <input type="file" id="import-file" style="display:none" onchange="window.importData(event)">
+                </div>
+
+                <h3 style="margin-bottom: 1.5rem; margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;"><i class="fas fa-cloud-arrow-up"></i> Sincronización en la Nube (Firebase)</h3>
+                <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 1.5rem;">
+                    Pega aquí tu configuración de Firebase para sincronizar datos en tiempo real entre tu PC y tu móvil.
+                </p>
+                <div class="input-group mb-3">
+                    <label>Firebase Config (JSON)</label>
+                    <textarea id="set-firebase-config" class="form-input" rows="5" placeholder='{ "apiKey": "...", "authDomain": "...", ... }'></textarea>
+                </div>
+                <button class="btn-primary" onclick="window.connectFirebase()"><i class="fas fa-link"></i> Conectar y Sincronizar Ahora</button>
+                <p id="firebase-status" style="font-size:0.8rem; margin-top:10px; color:var(--text-muted);">Estado: Desconectado (Solo Local)</p>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ─────────────────────────────────────── MODALS ─────────────────────────────────────── -->
+
+<!-- Finance Modal -->
+<div id="finance-modal" class="modal">
+    <div class="modal-content" style="max-width:480px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+            <h2 id="finance-modal-title">Registrar Transacción</h2>
+            <button class="btn-icon" onclick="window.closeFinanceModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="input-group">
+                <label>Concepto</label>
+                <input type="text" id="fin-concept" placeholder="Ej: Venta Ninot Faller">
+            </div>
+            <div class="input-group">
+                <label>Importe (€)</label>
+                <input type="number" id="fin-amount" placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="input-group">
+                <label>Categoría</label>
+                <select id="fin-category">
+                    <option>Venta</option>
+                    <option>Filamento</option>
+                    <option>IA / Software</option>
+                    <option>Mantenimiento</option>
+                    <option>Electricidad</option>
+                    <option>Logística</option>
+                    <option>Herramientas</option>
+                    <option>General</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Fecha</label>
+                <input type="date" id="fin-date">
+            </div>
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:2rem;">
+            <button class="btn-secondary" onclick="window.closeFinanceModal()" style="flex:1;justify-content:center;">Cancelar</button>
+            <button class="btn-primary" onclick="window.saveFinanceEntry()" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Invoice Modal -->
+<div id="invoice-modal" class="modal">
+    <div class="modal-content" style="max-width:760px;">
+        <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem; padding: 0 1rem;">
+            <h2>Presupuesto / Factura</h2>
+            <button class="btn-icon" onclick="window.closeInvoice()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="invoice-document" style="background-color: #ffffff; background-image: linear-gradient(#f8fafc 1px, transparent 1px), linear-gradient(90deg, #f8fafc 1px, transparent 1px); background-size: 20px 20px; border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.15); color: #0f172a; font-family: 'Inter', system-ui, sans-serif; position: relative;">
+            
+            <!-- Top Orange Accent Bar -->
+            <div style="height: 6px; background: linear-gradient(90deg, #f97316, #fb923c); width: 100%;"></div>
+
+            <div style="padding: 4rem 4rem 2rem 4rem;">
+                <!-- Header -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4rem;">
+                    <div>
+                        <div style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; background:#0f172a; border-radius:8px; margin-bottom:1rem;">
+                            <i class="fas fa-cube" style="color:#f97316; font-size:1.5rem;"></i>
+                        </div>
+                        <h2 id="inv-company-name" style="font-size: 2.8rem; letter-spacing: -2px; font-weight: 900; margin-bottom: 0; line-height: 1;">NINOT LAB</h2>
+                        <p id="inv-company-sub" style="font-size: 0.85rem; letter-spacing: 3px; color: #64748b; text-transform: uppercase; margin-top: 8px; font-weight: 600;">Prototipado & Impresión 3D</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h3 style="font-size: 1.8rem; font-weight: 300; letter-spacing: 2px; color: #94a3b8; margin:0;">FACTURA PROFORMA</h3>
+                        <!-- Fake Barcode -->
+                        <div style="height: 30px; width: 120px; margin-left: auto; margin-top: 10px; margin-bottom: 10px; background: repeating-linear-gradient(90deg, #0f172a, #0f172a 2px, transparent 2px, transparent 5px, #0f172a 5px, #0f172a 6px, transparent 6px, transparent 10px);"></div>
+                        <p id="inv-num" style="font-size: 0.9rem; font-family: 'Courier New', monospace; font-weight: 800; color: #0f172a; letter-spacing: 1px;">REF: #000000</p>
+                    </div>
+                </div>
+
+                <!-- Info Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid #0f172a; border-bottom: 2px solid #0f172a; padding: 1.5rem 0; margin-bottom: 3rem;">
+                    <div style="border-right: 1px solid #e2e8f0; padding-right: 2rem;">
+                        <p style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #f97316; margin-bottom: 8px; font-weight: 800;">Cliente / Facturar A</p>
+                        <strong id="inv-client-name" style="font-size: 1.3rem; color: #0f172a; display: block; margin-bottom: 4px; font-weight: 800;">—</strong>
+                        <p id="inv-client-contact" style="color: #64748b; font-size: 0.9rem; font-family: monospace;"></p>
+                    </div>
+                    <div style="padding-left: 2rem; display: flex; flex-direction: column; justify-content: center;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; font-weight: 700;">Fecha de Emisión:</span>
+                            <span id="inv-date" style="font-size: 0.9rem; font-family: monospace; font-weight: 800; color: #0f172a;"></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; font-weight: 700;">Validez:</span>
+                            <span style="font-size: 0.9rem; font-family: monospace; font-weight: 800; color: #0f172a;">15 DÍAS</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; font-weight: 700;">Proyecto ID:</span>
+                            <span style="font-size: 0.9rem; font-family: monospace; font-weight: 800; color: #f97316;">NL-3D-2026</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Table -->
+                <div style="margin-bottom: 3rem;">
+                    <table style="width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 12px 0; text-align: left; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px dashed #cbd5e1; font-family: 'Inter', sans-serif;">Descripción del Trabajo / Material</th>
+                                <th style="padding: 12px 0; text-align: center; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px dashed #cbd5e1; font-family: 'Inter', sans-serif;">Cant.</th>
+                                <th style="padding: 12px 0; text-align: right; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px dashed #cbd5e1; font-family: 'Inter', sans-serif;">Tarifa Unit.</th>
+                                <th style="padding: 12px 0; text-align: right; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px dashed #cbd5e1; font-family: 'Inter', sans-serif;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inv-items" style="font-size: 0.95rem;">
+                            <!-- Items go here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Totals Section -->
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 3rem;">
+                    <div style="width: 400px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Subtotal (Base Imponible)</span>
+                            <strong id="inv-subtotal" style="color: #0f172a; font-family: monospace; font-size: 1rem;">€0.00</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                            <span style="color: #64748b; font-size: 0.9rem; font-weight: 500;">IVA (21%)</span>
+                            <strong id="inv-tax" style="color: #0f172a; font-family: monospace; font-size: 1rem;">€0.00</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-top: 2px solid #0f172a; padding-top: 16px; margin-bottom: 24px;">
+                            <span style="font-size: 1.2rem; font-weight: 900; letter-spacing: 1px; color: #0f172a;">TOTAL EUR</span>
+                            <span id="inv-grand-total" style="font-size: 1.5rem; font-weight: 900; color: #f97316; font-family: monospace;">€0.00</span>
+                        </div>
+                        
+                        <div style="background: #ffffff; border: 1px solid #cbd5e1; padding: 12px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <span style="color: #475569; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Abono Inicial (50%)</span>
+                                <strong id="inv-advance" style="color: #10b981; font-family: monospace;">€0.00</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: #475569; font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">Pendiente a Entrega</span>
+                                <strong id="inv-pending" style="color: #f59e0b; font-family: monospace;">€0.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer / Terms -->
+                <div style="border-top: 1px solid #e2e8f0; padding-top: 2rem; display: flex; gap: 3rem;">
+                    <div style="flex: 2;">
+                        <h4 style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #0f172a; margin-bottom: 8px;">Términos y Producción</h4>
+                        <p style="font-size: 0.75rem; color: #64748b; line-height: 1.6; text-align: justify;">
+                            El inicio de la impresión y/o modelado 3D está supeditado a la recepción del <strong>Abono Inicial (50%)</strong> en concepto de bloqueo de máquinas y provisión de materiales. Una vez impreso el modelo, las modificaciones estructurales incurrirán en cargos adicionales. El pago restante se efectuará a la entrega de la pieza terminada.
+                        </p>
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #0f172a; margin-bottom: 8px;">Métodos de Pago</h4>
+                        <div style="font-size: 0.8rem; color: #64748b; line-height: 1.6; font-family: monospace;">
+                            <strong>IBAN:</strong> <span id="inv-iban">ES00 1234 5678 9012 3456</span><br>
+                            <strong>BIZUM:</strong> <span id="inv-bizum">+34 600 000 000</span><br>
+                            <strong>Titular:</strong> <span id="inv-titular">Ninot Lab</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="no-print" style="display:flex;justify-content:flex-end;gap:1rem;margin-top:2rem;">
+            <button class="btn-secondary" onclick="window.closeInvoice()">Cerrar</button>
+            <button class="btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Imprimir / PDF</button>
+        </div>
+    </div>
+</div>
+
+<!-- Project Detail Modal -->
+<div id="project-modal" class="modal">
+    <div class="modal-content" style="max-width:900px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;">
+            <div>
+                <h2 id="proj-modal-name">Proyecto</h2>
+                <p class="text-muted" id="proj-modal-client" style="font-size:0.9rem;"></p>
+            </div>
+            <button class="btn-icon" onclick="window.closeProjectModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
+            <div>
+                <div class="card mb-3">
+                    <h3><i class="fas fa-list-check"></i> Checklist de Producción</h3>
+                    <div id="proj-modal-checklist" style="display:flex;flex-direction:column;gap:8px;"></div>
+                    <div style="display:flex;gap:8px;margin-top:1rem;">
+                        <input type="text" id="proj-new-task" class="form-input" placeholder="Nueva tarea..." style="flex:1;">
+                        <button class="btn-primary" onclick="window.addProjectTask()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-cubes"></i> Diseños Vinculados</h3>
+                    <ul class="order-list" id="proj-modal-designs"></ul>
+                    <div style="display:flex;gap:8px;margin-top:1rem;">
+                        <select id="proj-design-select" class="form-input" style="flex:1;"></select>
+                        <button class="btn-primary" onclick="window.linkDesignToProject()"><i class="fas fa-link"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <div class="card mb-3">
+                    <h3><i class="fas fa-stopwatch"></i> Tiempo Registrado</h3>
+                    <div style="font-size:2.5rem;font-weight:800;letter-spacing:-1px;color:var(--accent);" id="proj-modal-time">0h</div>
+                    <div style="display:flex;gap:8px;margin-top:1rem;">
+                        <input type="number" id="proj-add-time" class="form-input" placeholder="Horas..." step="0.5" style="flex:1;">
+                        <button class="btn-secondary" onclick="window.addProjectTime()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div class="card mb-3">
+                    <h3><i class="fas fa-note-sticky"></i> Notas</h3>
+                    <textarea id="proj-modal-notes" class="form-input" rows="4" placeholder="Detalles del encargo..." onchange="window.saveProjectNotes()"></textarea>
+                </div>
+                <div class="card mb-3" id="proj-modal-artist-box" style="display:none;">
+                    <h3><i class="fas fa-user-pen"></i> Artista Asignado</h3>
+                    <input type="text" id="proj-modal-artist" class="form-input" placeholder="Nombre del artista..." onchange="window.saveProjectArtist()">
+                </div>
+
+                <div id="painting-comparison" style="display:none; margin-bottom:1.5rem;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                        <div class="card" style="padding:10px; text-align:center;">
+                            <span class="ps-label" style="display:block; margin-bottom:8px;">Boceto Antes</span>
+                            <div id="before-img-container" style="height:150px; background:var(--s2); border-radius:8px; overflow:hidden; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="window.uploadPaintingImg('before')">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                        </div>
+                        <div class="card" style="padding:10px; text-align:center;">
+                            <span class="ps-label" style="display:block; margin-bottom:8px;">Resultado Después</span>
+                            <div id="after-img-container" style="height:150px; background:var(--s2); border-radius:8px; overflow:hidden; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="window.uploadPaintingImg('after')">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="width:100%;justify-content:center;" onclick="window.generateProjectInvoice()">
+                    <i class="fas fa-file-invoice-dollar"></i> Generar Presupuesto
+                </button>
+            </div>
+        </div>
+        <div class="card" style="margin-top:1.5rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h3 style="margin-bottom:0;"><i class="fas fa-images"></i> Bocetos y Referencias</h3>
+                <button class="btn-secondary" onclick="window.addProjectSketch()" style="padding:8px 14px;font-size:0.85rem;"><i class="fas fa-plus"></i> Imagen</button>
+            </div>
+            <div id="proj-modal-sketches" style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:4px;min-height:60px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Professional UX Modals -->
+<div id="add-project-modal" class="modal">
+    <div class="modal-content" style="max-width:400px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;" class="mb-3">
+            <div class="input-group">
+                <label>Tipo de Proyecto</label>
+                <select id="new-proj-type" class="form-input">
+                    <option value="3d_print">Impresión 3D</option>
+                    <option value="painting">Pintura / Arte</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Cliente</label>
+                <select id="new-proj-client" class="form-input"></select>
+            </div>
+        </div>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Nombre del Encargo</label>
+            <input type="text" id="new-proj-name" class="form-input">
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:2rem;">
+            <button class="btn-secondary" onclick="document.getElementById('add-project-modal').classList.remove('active')" style="flex:1;justify-content:center;">Cancelar</button>
+            <button class="btn-primary" onclick="window.confirmAddProject()" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Crear</button>
+        </div>
+    </div>
+</div>
+
+<div id="add-stock-modal" class="modal">
+    <div class="modal-content" style="max-width:400px;">
+        <h2 style="margin-bottom:1.5rem;">Añadir Bobina</h2>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Material (Ej: PLA, PETG)</label>
+            <input type="text" id="new-stock-mat" class="form-input" placeholder="PLA Basic">
+        </div>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Color</label>
+            <input type="text" id="new-stock-color" class="form-input" placeholder="Azul Noche">
+        </div>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Coste (€)</label>
+            <input type="number" id="new-stock-cost" class="form-input" value="20.00" step="0.5">
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:2rem;">
+            <button class="btn-secondary" onclick="document.getElementById('add-stock-modal').classList.remove('active')" style="flex:1;justify-content:center;">Cancelar</button>
+            <button class="btn-primary" onclick="window.confirmAddStock()" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Añadir</button>
+        </div>
+    </div>
+</div>
+
+<div id="add-client-modal" class="modal">
+    <div class="modal-content" style="max-width:400px;">
+        <h2 style="margin-bottom:1.5rem;">Nuevo Cliente</h2>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Nombre</label>
+            <input type="text" id="new-client-name" class="form-input">
+        </div>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Email o Teléfono</label>
+            <input type="text" id="new-client-email" class="form-input">
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:2rem;">
+            <button class="btn-secondary" onclick="document.getElementById('add-client-modal').classList.remove('active')" style="flex:1;justify-content:center;">Cancelar</button>
+            <button class="btn-primary" onclick="window.confirmAddClient()" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Crear</button>
+        </div>
+    </div>
+</div>
+
+<div id="add-design-modal" class="modal">
+    <div class="modal-content" style="max-width:400px;">
+        <h2 style="margin-bottom:1.5rem;">Nuevo Diseño</h2>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Nombre del Diseño</label>
+            <input type="text" id="new-design-name" class="form-input">
+        </div>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Categoría</label>
+            <select id="new-design-category" class="form-input">
+                <option value="Ninots">Ninots Falleros</option>
+                <option value="Llaveros">Llaveros y Merchandising</option>
+                <option value="Trofeos">Trofeos</option>
+                <option value="Industrial">Industrial y Prototipos</option>
+            </select>
+        </div>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Precio Estimado (€)</label>
+            <input type="number" id="new-design-price" class="form-input" value="15.00" step="0.5">
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:2rem;">
+            <button class="btn-secondary" onclick="document.getElementById('add-design-modal').classList.remove('active')" style="flex:1;justify-content:center;">Cancelar</button>
+            <button class="btn-primary" onclick="window.confirmAddDesign()" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Añadir</button>
+        </div>
+    </div>
+</div>
+
+<div id="paint-modal" class="modal">
+    <div class="modal-content" style="max-width:900px; padding:1.5rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <h2>Taller de Pintura Digital</h2>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-secondary" onclick="window.closePaint()"><i class="fas fa-times"></i> Salir</button>
+                <button class="btn-primary" onclick="window.savePaint()"><i class="fas fa-save"></i> Guardar en Proyecto</button>
+            </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 200px 1fr; gap:1.5rem;">
+            <div class="card" style="display:flex; flex-direction:column; gap:1.25rem;">
+                <div class="input-group">
+                    <label>Herramienta</label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button class="btn-secondary" id="brush-tool" onclick="window.setTool('brush')" style="padding:10px; justify-content:center; border-color:var(--accent); color:var(--accent2)"><i class="fas fa-paintbrush"></i></button>
+                        <button class="btn-secondary" id="eraser-tool" onclick="window.setTool('eraser')" style="padding:10px; justify-content:center;"><i class="fas fa-eraser"></i></button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Color</label>
+                    <input type="color" id="paint-color" value="#6366f1" style="height:45px; padding:2px; border:none; background:transparent;">
+                </div>
+                <div class="input-group">
+                    <label>Tamaño: <span id="brush-size-val">5</span>px</label>
+                    <input type="range" id="brush-size" min="1" max="50" value="5" oninput="document.getElementById('brush-size-val').innerText = this.value">
+                </div>
+                <button class="btn-secondary" style="margin-top:auto;" onclick="window.clearCanvas()"><i class="fas fa-trash-can"></i> Limpiar Todo</button>
+            </div>
+            <div id="canvas-container" style="background:#fff; border-radius:12px; overflow:hidden; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; min-height:500px; cursor:crosshair;">
+                <canvas id="paint-canvas" width="800" height="600" style="background:white;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="add-profile-modal" class="modal">
+    <div class="modal-content" style="max-width:400px;">
+        <h2 style="margin-bottom:1.5rem;">Nuevo Perfil de Laminado</h2>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Material y Marca</label>
+            <input type="text" id="new-prof-mat" class="form-input" placeholder="Ej: PLA SmartMaterials">
+        </div>
+        <div class="input-group mb-3" style="width:100%;">
+            <label>Impresora Óptima</label>
+            <input type="text" id="new-prof-printer" class="form-input" placeholder="Ej: Bambu Lab A1">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;" class="mb-3">
+            <div class="input-group">
+                <label>Temp. Boquilla (°C)</label>
+                <input type="number" id="new-prof-temp" class="form-input" value="210">
+            </div>
+            <div class="input-group">
+                <label>Temp. Cama (°C)</label>
+                <input type="number" id="new-prof-bed" class="form-input" value="60">
+            </div>
+            <div class="input-group">
+                <label>Flujo (%)</label>
+                <input type="number" id="new-prof-flow" class="form-input" value="0.98" step="0.01">
+            </div>
+            <div class="input-group">
+                <label>Retracción (mm)</label>
+                <input type="number" id="new-prof-ret" class="form-input" value="0.8" step="0.1">
+            </div>
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:2rem;">
+            <button class="btn-secondary" onclick="document.getElementById('add-profile-modal').classList.remove('active')" style="flex:1;justify-content:center;">Cancelar</button>
+            <button class="btn-primary" onclick="window.confirmAddProfile()" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Guardar</button>
+        </div>
+    </div>
+</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
