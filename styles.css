@@ -442,24 +442,40 @@ header{
     .invoice-document table td:nth-child(2) { display: none; }
     .designs-grid { grid-template-columns: 1fr; }
     .design-img { height: 100px; }
-    .calc-grid { grid-template-columns: 1fr 1fr; }
+    .calc-grid { grid-template-columns: 1fr; }
     .dash-grid { grid-template-columns: 1fr; }
     .inventory-grid { grid-template-columns: 1fr; }
+    /* Clients: stack directory + detail */
+    #clients-view > div:last-of-type[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+    #clients-view .kpi-grid { grid-template-columns: 1fr !important; }
+    /* Finanzas: stack 3 KPIs */
+    #finance-view .kpi-grid { grid-template-columns: 1fr !important; }
+    /* Simulator: stack selects */
+    #inventory-view .card div[style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    /* Settings: stack form grids */
+    #settings-view div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    #settings-view div[style*="display: flex; gap: 1rem"] {
+        flex-direction: column;
+    }
+    /* Paint modal */
     #paint-modal .modal-content div[style*="grid-template-columns: 200px"] {
         grid-template-columns: 1fr !important;
     }
     #paint-canvas { width: 100% !important; height: auto !important; }
-    #settings-view div[style*="display: flex; gap: 1rem"],
-    #settings-view div[style*="display: grid; grid-template-columns: 1fr 1fr"] {
-        grid-template-columns: 1fr !important;
-        flex-direction: column;
-    }
     #painting-comparison div[style*="grid-template-columns:1fr 1fr"] {
         grid-template-columns: 1fr !important;
     }
     .nav-item { padding: 11px 1rem; }
     .btn-icon { width: 36px; height: 36px; }
     select, input, textarea { font-size: 16px !important; }
+    /* Prevent any horizontal overflow */
+    body, .content { overflow-x: hidden; }
 }
 
 @media (max-width: 380px) {
