@@ -294,16 +294,25 @@
         <section id="designs-view" class="view">
             <div class="view-header">
                 <h2>Catálogo de Diseños</h2>
-                <div style="display:flex;gap:1rem;">
-                    <select id="design-category-filter" class="form-input" style="width:200px;" onchange="window.renderDesigns()">
-                        <option value="all">Todas las Categorías</option>
-                        <option value="Ninots">Ninots Falleros</option>
-                        <option value="Llaveros">Llaveros y Merchandising</option>
-                        <option value="Trofeos">Trofeos</option>
-                        <option value="Industrial">Industrial y Prototipos</option>
-                    </select>
-                    <button class="btn-primary" onclick="window.addDesign()"><i class="fas fa-plus"></i> Nuevo Diseño</button>
+                <button class="btn-primary" onclick="window.addDesign()"><i class="fas fa-plus"></i> Nuevo Diseño</button>
+            </div>
+            <div class="kpi-grid" style="margin-bottom:0.75rem;">
+                <div class="kpi-card kpi-blue"><div class="kpi-icon"><i class="fas fa-cube"></i></div><div><div class="kpi-label">Total Diseños</div><div class="kpi-value" id="cat-kpi-total">0</div></div></div>
+                <div class="kpi-card kpi-purple"><div class="kpi-icon"><i class="fas fa-tags"></i></div><div><div class="kpi-label">Categorías</div><div class="kpi-value" id="cat-kpi-cats">0</div></div></div>
+                <div class="kpi-card kpi-green"><div class="kpi-icon"><i class="fas fa-euro-sign"></i></div><div><div class="kpi-label">Precio Medio</div><div class="kpi-value" id="cat-kpi-avg">€0</div></div></div>
+                <div class="kpi-card kpi-orange"><div class="kpi-icon"><i class="fas fa-coins"></i></div><div><div class="kpi-label">Valor Catálogo</div><div class="kpi-value" id="cat-kpi-value">€0</div></div></div>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:0.75rem;align-items:center;flex-wrap:wrap;">
+                <div style="flex:1;min-width:160px;position:relative;">
+                    <i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.7rem;"></i>
+                    <input type="text" id="design-search" class="form-input" placeholder="Buscar diseño..." oninput="window.renderDesigns()" style="padding-left:28px;font-size:0.75rem;">
                 </div>
+                <select id="design-category-filter" class="form-input" style="width:auto;font-size:0.75rem;" onchange="window.renderDesigns()">
+                    <option value="all">Todas</option><option value="Ninots">Ninots</option><option value="Llaveros">Llaveros</option><option value="Trofeos">Trofeos</option><option value="Industrial">Industrial</option>
+                </select>
+                <select id="design-sort" class="form-input" style="width:auto;font-size:0.75rem;" onchange="window.renderDesigns()">
+                    <option value="name">Nombre A-Z</option><option value="price-desc">Precio ↓</option><option value="price-asc">Precio ↑</option><option value="weight">Peso ↓</option><option value="recent">Reciente</option>
+                </select>
             </div>
             <div class="designs-grid" id="designs-container"></div>
         </section>
@@ -930,26 +939,30 @@
 </div>
 
 <div id="add-design-modal" class="modal">
-    <div class="modal-content" style="max-width:400px;">
-        <h2 style="margin-bottom:1.5rem;">Nuevo Diseño</h2>
-        <div class="input-group mb-3" style="width:100%;">
-            <label>Nombre del Diseño</label>
-            <input type="text" id="new-design-name" class="form-input">
+    <div class="modal-content" style="max-width:440px;">
+        <h2 style="margin-bottom:1rem;font-size:1.1rem;">Nuevo Diseño</h2>
+        <div class="input-group mb-3"><label>Nombre del Diseño</label><input type="text" id="new-design-name" class="form-input" placeholder="Ej: Ninot Faller v3"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" class="mb-3">
+            <div class="input-group"><label>Categoría</label>
+                <select id="new-design-category" class="form-input">
+                    <option value="Ninots">Ninots Falleros</option><option value="Llaveros">Llaveros</option><option value="Trofeos">Trofeos</option><option value="Industrial">Industrial</option>
+                </select>
+            </div>
+            <div class="input-group"><label>Precio (€)</label><input type="number" id="new-design-price" class="form-input" value="15.00" step="0.5"></div>
         </div>
-        <div class="input-group mb-3" style="width:100%;">
-            <label>Categoría</label>
-            <select id="new-design-category" class="form-input">
-                <option value="Ninots">Ninots Falleros</option>
-                <option value="Llaveros">Llaveros y Merchandising</option>
-                <option value="Trofeos">Trofeos</option>
-                <option value="Industrial">Industrial y Prototipos</option>
-            </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;" class="mb-3">
+            <div class="input-group"><label>Peso (g)</label><input type="number" id="new-design-weight" class="form-input" value="100"></div>
+            <div class="input-group"><label>Horas</label><input type="number" id="new-design-time" class="form-input" value="2" step="0.5"></div>
+            <div class="input-group"><label>Coste (€)</label><input type="number" id="new-design-cost" class="form-input" value="3" step="0.5"></div>
         </div>
-        <div class="input-group mb-3" style="width:100%;">
-            <label>Precio Estimado (€)</label>
-            <input type="number" id="new-design-price" class="form-input" value="15.00" step="0.5">
+        <div class="input-group mb-3">
+            <label>Imagen (URL o subir)</label>
+            <div style="display:flex;gap:5px;">
+                <input type="text" id="new-design-img" class="form-input" placeholder="https://... o haz click en subir" style="flex:1;">
+                <button class="btn-secondary" onclick="window.uploadDesignImg()" style="padding:5px 10px;font-size:0.72rem;"><i class="fas fa-upload"></i></button>
+            </div>
         </div>
-        <div style="display:flex;gap:1rem;margin-top:2rem;">
+        <div style="display:flex;gap:0.75rem;margin-top:1rem;">
             <button class="btn-secondary" onclick="document.getElementById('add-design-modal').classList.remove('active')" style="flex:1;justify-content:center;">Cancelar</button>
             <button class="btn-primary" onclick="window.confirmAddDesign()" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Añadir</button>
         </div>

@@ -320,38 +320,86 @@ function initCalculator() {
 // Designs
 function renderDesigns() {
     const container = document.getElementById('designs-container');
-    const filter = document.getElementById('design-category-filter') ? document.getElementById('design-category-filter').value : 'all';
     if (!container) return;
+    
+    const filter = document.getElementById('design-category-filter')?.value || 'all';
+    const search = (document.getElementById('design-search')?.value || '').toLowerCase();
+    const sort = document.getElementById('design-sort')?.value || 'name';
+
+    // KPIs
+    document.getElementById('cat-kpi-total').innerText = state.designs.length;
+    const cats = new Set(state.designs.map(d => d.tags));
+    document.getElementById('cat-kpi-cats').innerText = cats.size;
+    const avgPrice = state.designs.length > 0 ? state.designs.reduce((s,d) => s+d.price, 0) / state.designs.length : 0;
+    document.getElementById('cat-kpi-avg').innerText = `€${avgPrice.toFixed(0)}`;
+    document.getElementById('cat-kpi-value').innerText = `€${state.designs.reduce((s,d) => s+d.price, 0).toFixed(0)}`;
 
     let filtered = state.designs;
-    if(filter !== 'all') {
-        filtered = filtered.filter(d => d.tags.includes(filter));
-    }
+    if(filter !== 'all') filtered = filtered.filter(d => d.tags === filter || (d.tags && d.tags.includes(filter)));
+    if(search) filtered = filtered.filter(d => d.name.toLowerCase().includes(search));
+    
+    // Sort
+    filtered = [...filtered].sort((a,b) => {
+        if(sort === 'name') return a.name.localeCompare(b.name);
+        if(sort === 'price-desc') return b.price - a.price;
+        if(sort === 'price-asc') return a.price - b.price;
+        if(sort === 'weight') return b.weight - a.weight;
+        if(sort === 'recent') return b.id - a.id;
+        return 0;
+    });
 
-    container.innerHTML = filtered.map(d => `
-        <div class="design-card">
-            <div class="design-img">
-                ${d.img ? `<img src="${d.img}" alt="${d.name}">` : '<i class="fas fa-cube"></i>'}
-            </div>
-            <div class="design-content">
-                <span class="design-tag">${d.tags}</span>
-                <h3 style="margin-bottom: 8px;">${d.name}</h3>
-                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-                    <i class="fas fa-code-branch"></i> ${d.version} | ${d.license}
+    // Profit margin display
+    container.innerHTML = filtered.map(d => {
+        const margin = d.price > 0 && d.cost > 0 ? Math.round(((d.price - d.cost) / d.cost) * 100) : 0;
+        const marginColor = margin > 200 ? 'var(--green)' : margin > 100 ? 'var(--yellow)' : 'var(--red)';
+        const projCount = state.projects.filter(p => (p.linkedDesigns || []).includes(d.id)).length;
+        return `
+            <div class="design-card" style="position:relative;">
+                <div class="design-img" style="position:relative;">
+                    ${d.img ? `<img src="${d.img}" alt="${d.name}">` : `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-muted);"><i class="fas fa-cube" style="font-size:1.5rem;"></i><span style="font-size:0.6rem;">Sin imagen</span></div>`}
+                    <div style="position:absolute;top:5px;right:5px;display:flex;gap:3px;">
+                        <button class="btn-icon" onclick="event.stopPropagation();window.editDesign(${d.id})" style="width:24px;height:24px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.6rem;backdrop-filter:blur(4px);"><i class="fas fa-pen"></i></button>
+                        <button class="btn-icon" onclick="event.stopPropagation();window.duplicateDesign(${d.id})" style="width:24px;height:24px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.6rem;backdrop-filter:blur(4px);"><i class="fas fa-copy"></i></button>
+                        <button class="btn-icon" onclick="event.stopPropagation();window.deleteDesign(${d.id})" style="width:24px;height:24px;background:rgba(239,68,68,0.8);border:none;color:white;font-size:0.6rem;backdrop-filter:blur(4px);"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
-                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; font-weight:600; color: var(--text-1);">
-                    <span><i class="fas fa-weight-hanging" style="color:var(--accent2)"></i> ${d.weight}g</span>
-                    <span><i class="fas fa-clock" style="color:var(--accent2)"></i> ${d.time}h</span>
-                    <span style="color:var(--green)">€${d.price.toFixed(2)}</span>
+                <div class="design-content">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                        <span class="design-tag">${d.tags || d.category || '—'}</span>
+                        ${projCount > 0 ? `<span style="font-size:0.55rem;color:var(--text-muted);"><i class="fas fa-link"></i> ${projCount}</span>` : ''}
+                    </div>
+                    <h3 style="margin-bottom:4px;font-size:0.85rem;">${d.name}</h3>
+                    <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:6px;">
+                        v${d.version || '1.0'} · ${d.license || 'Estándar'}
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;font-size:0.72rem;">
+                        <div style="text-align:center;background:var(--s2);padding:3px;border-radius:5px;">
+                            <div class="ps-label">Peso</div><strong>${d.weight}g</strong>
+                        </div>
+                        <div style="text-align:center;background:var(--s2);padding:3px;border-radius:5px;">
+                            <div class="ps-label">Tiempo</div><strong>${d.time}h</strong>
+                        </div>
+                        <div style="text-align:center;background:var(--s2);padding:3px;border-radius:5px;">
+                            <div class="ps-label">Margen</div><strong style="color:${marginColor};">${margin}%</strong>
+                        </div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
+                        <span style="font-size:0.65rem;color:var(--text-muted);">Coste: €${(d.cost || 0).toFixed(2)}</span>
+                        <span style="font-size:0.95rem;font-weight:800;color:var(--green);">€${d.price.toFixed(2)}</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('') || '<p class="text-muted" style="grid-column:1/-1;text-align:center;padding:2rem;">No se encontraron diseños.</p>';
 }
 
 window.addDesign = () => {
     document.getElementById('new-design-name').value = '';
     document.getElementById('new-design-price').value = '15.00';
+    document.getElementById('new-design-weight').value = '100';
+    document.getElementById('new-design-time').value = '2';
+    document.getElementById('new-design-cost').value = '3';
+    document.getElementById('new-design-img').value = '';
     document.getElementById('add-design-modal').classList.add('active');
 };
 
@@ -359,14 +407,60 @@ window.confirmAddDesign = () => {
     const name = document.getElementById('new-design-name').value;
     const price = parseFloat(document.getElementById('new-design-price').value);
     const tags = document.getElementById('new-design-category').value;
+    const weight = parseInt(document.getElementById('new-design-weight').value) || 100;
+    const time = parseFloat(document.getElementById('new-design-time').value) || 2;
+    const cost = parseFloat(document.getElementById('new-design-cost').value) || 3;
+    const img = document.getElementById('new-design-img').value || null;
     if (!name || isNaN(price)) { alert("Datos inválidos"); return; }
     
     state.designs.push({
-        id: Date.now(),
-        name, tags, version: 'v1.0', license: 'Estándar', weight: 100, time: 2, cost: 2, price, img: null
+        id: Date.now(), name, tags, version: '1.0', license: 'Estándar',
+        weight, time, cost, price, img, category: tags
     });
     saveState();
     document.getElementById('add-design-modal').classList.remove('active');
+};
+
+window.deleteDesign = (id) => {
+    const d = state.designs.find(x => x.id === id);
+    if(!d) return;
+    if(!confirm(`¿Eliminar "${d.name}" del catálogo?`)) return;
+    state.designs = state.designs.filter(x => x.id !== id);
+    saveState();
+};
+
+window.duplicateDesign = (id) => {
+    const d = state.designs.find(x => x.id === id);
+    if(!d) return;
+    state.designs.push({ ...d, id: Date.now(), name: d.name + ' (copia)' });
+    saveState();
+};
+
+window.editDesign = (id) => {
+    const d = state.designs.find(x => x.id === id);
+    if(!d) return;
+    const newName = prompt('Nombre:', d.name);
+    if(!newName) return;
+    const newPrice = parseFloat(prompt('Precio (€):', d.price));
+    if(isNaN(newPrice)) return;
+    const newWeight = parseInt(prompt('Peso (g):', d.weight)) || d.weight;
+    const newTime = parseFloat(prompt('Tiempo (h):', d.time)) || d.time;
+    const newCost = parseFloat(prompt('Coste (€):', d.cost)) || d.cost;
+    d.name = newName; d.price = newPrice; d.weight = newWeight; d.time = newTime; d.cost = newCost;
+    saveState();
+};
+
+window.uploadDesignImg = () => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => { document.getElementById('new-design-img').value = ev.target.result; };
+        reader.readAsDataURL(file);
+    };
+    input.click();
 };
 
 // Finance
