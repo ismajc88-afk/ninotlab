@@ -446,15 +446,51 @@ window.duplicateDesign = (id) => {
 window.editDesign = (id) => {
     const d = state.designs.find(x => x.id === id);
     if(!d) return;
-    const newName = prompt('Nombre:', d.name);
-    if(!newName) return;
-    const newPrice = parseFloat(prompt('Precio (€):', d.price));
-    if(isNaN(newPrice)) return;
-    const newWeight = parseInt(prompt('Peso (g):', d.weight)) || d.weight;
-    const newTime = parseFloat(prompt('Tiempo (h):', d.time)) || d.time;
-    const newCost = parseFloat(prompt('Coste (€):', d.cost)) || d.cost;
-    d.name = newName; d.price = newPrice; d.weight = newWeight; d.time = newTime; d.cost = newCost;
+    document.getElementById('edit-design-id').value = d.id;
+    document.getElementById('edit-design-name').value = d.name;
+    document.getElementById('edit-design-category').value = d.category || 'Ninots';
+    document.getElementById('edit-design-price').value = d.price;
+    document.getElementById('edit-design-weight').value = d.weight;
+    document.getElementById('edit-design-time').value = d.time;
+    document.getElementById('edit-design-cost').value = d.cost || 0;
+    document.getElementById('edit-design-img').value = d.img || '';
+    document.getElementById('edit-design-modal').classList.add('active');
+};
+
+window.confirmEditDesign = () => {
+    const id = parseInt(document.getElementById('edit-design-id').value);
+    const d = state.designs.find(x => x.id === id);
+    if(!d) return;
+    
+    d.name = document.getElementById('edit-design-name').value;
+    d.category = document.getElementById('edit-design-category').value;
+    d.price = parseFloat(document.getElementById('edit-design-price').value) || 0;
+    d.weight = parseInt(document.getElementById('edit-design-weight').value) || 0;
+    d.time = parseFloat(document.getElementById('edit-design-time').value) || 0;
+    d.cost = parseFloat(document.getElementById('edit-design-cost').value) || 0;
+    d.img = document.getElementById('edit-design-img').value;
+    
+    document.getElementById('edit-design-modal').classList.remove('active');
     saveState();
+    window.renderDesigns(); // Refresh grid
+    
+    // Refresh detail modal if it's open
+    if(state.currentDesignDetailId === id) {
+        window.openDesignDetail(id);
+    }
+};
+
+window.uploadEditDesignImg = () => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => { document.getElementById('edit-design-img').value = ev.target.result; };
+        reader.readAsDataURL(file);
+    };
+    input.click();
 };
 
 window.uploadDesignImg = () => {
@@ -616,7 +652,6 @@ window.editDesignFromDetail = () => {
     const d = state.designs.find(x => x.id === state.currentDesignDetailId);
     if(!d) return;
     window.editDesign(d.id);
-    window.openDesignDetail(d.id); // refresh
 };
 
 window.duplicateDesignFromDetail = () => {

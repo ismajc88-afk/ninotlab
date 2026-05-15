@@ -1052,6 +1052,49 @@
     </div>
 </div>
 
+<!-- Edit Design Modal -->
+<div id="edit-design-modal" class="modal">
+    <div class="modal-content" style="max-width:440px;">
+        <h2 style="margin-bottom:1rem;font-size:1.15rem;"><i class="fas fa-edit"></i> Editar Diseño</h2>
+        <input type="hidden" id="edit-design-id">
+        <div class="input-group mb-3">
+            <label>Nombre del Diseño</label>
+            <input type="text" id="edit-design-name" class="form-input">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" class="mb-3">
+            <div class="input-group">
+                <label>Categoría</label>
+                <select id="edit-design-category" class="form-input">
+                    <option value="Ninots">Ninots Falleros</option>
+                    <option value="Llaveros">Llaveros</option>
+                    <option value="Trofeos">Trofeos</option>
+                    <option value="Industrial">Industrial</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Precio (€)</label>
+                <input type="number" id="edit-design-price" class="form-input" step="0.5">
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;" class="mb-3">
+            <div class="input-group"><label>Peso (g)</label><input type="number" id="edit-design-weight" class="form-input"></div>
+            <div class="input-group"><label>Horas</label><input type="number" id="edit-design-time" class="form-input" step="0.5"></div>
+            <div class="input-group"><label>Coste (€)</label><input type="number" id="edit-design-cost" class="form-input" step="0.5"></div>
+        </div>
+        <div class="input-group mb-3">
+            <label>Imagen (URL)</label>
+            <div style="display:flex;gap:5px;">
+                <input type="text" id="edit-design-img" class="form-input" placeholder="https://..." style="flex:1;">
+                <button class="btn-secondary" onclick="window.uploadEditDesignImg()" style="padding:5px 10px;font-size:0.72rem;"><i class="fas fa-upload"></i></button>
+            </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+            <button class="btn-secondary" onclick="document.getElementById('edit-design-modal').classList.remove('active')" style="flex:1;justify-content:center;">Cancelar</button>
+            <button class="btn-primary" onclick="window.confirmEditDesign()" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Guardar Cambios</button>
+        </div>
+    </div>
+</div>
+
 <div id="add-design-modal" class="modal">
     <div class="modal-content" style="max-width:440px;">
         <h2 style="margin-bottom:1rem;font-size:1.1rem;">Nuevo Diseño</h2>
