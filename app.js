@@ -498,15 +498,40 @@ function renderClients() {
     const list = document.getElementById('clients-list');
     if (!list) return;
 
-    list.innerHTML = state.clients.map(c => {
+    // KPI stats
+    document.getElementById('clients-total').innerText = state.clients.length;
+    const activeIds = new Set(state.projects.filter(p => p.status !== 'done').map(p => p.clientId));
+    document.getElementById('clients-active').innerText = activeIds.size;
+    
+    // Find top client
+    const clientProjCounts = {};
+    state.projects.forEach(p => { clientProjCounts[p.clientId] = (clientProjCounts[p.clientId] || 0) + 1; });
+    const topId = Object.entries(clientProjCounts).sort((a,b) => b[1] - a[1])[0];
+    const topClient = topId ? state.clients.find(c => c.id == topId[0]) : null;
+    document.getElementById('clients-top').innerText = topClient ? topClient.name : '—';
+
+    const colors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#22c55e','#38bdf8','#ef4444'];
+    list.innerHTML = state.clients.map((c, i) => {
         const count = state.projects.filter(p => p.clientId === c.id).length;
+        const initials = c.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+        const bg = colors[i % colors.length];
+        const isActive = activeIds.has(c.id);
         return `
-            <li class="order-item client-item" onclick="window.selectClient(${c.id})">
-                <div class="order-info"><strong>${c.name}</strong><span>${c.email}</span></div>
-                <span class="status done">${count} Proyectos</span>
-            </li>
+            <div class="order-item client-item" onclick="window.selectClient(${c.id})" style="cursor:pointer;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:32px;height:32px;border-radius:8px;background:${bg};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.65rem;color:#fff;flex-shrink:0;">${initials}</div>
+                    <div class="order-info">
+                        <strong>${c.name}</strong>
+                        <span>${c.email || 'Sin contacto'}</span>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                    ${isActive ? '<span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>' : ''}
+                    <span class="status done">${count}</span>
+                </div>
+            </div>
         `;
-    }).join('');
+    }).join('') || '<p class="text-muted" style="font-size:0.8rem;text-align:center;padding:1rem;">Sin clientes aún</p>';
 }
 
 window.addClient = () => {
@@ -528,17 +553,54 @@ window.confirmAddClient = () => {
 window.selectClient = (id) => {
     state.selectedClient = state.clients.find(c => c.id == id);
     if(!state.selectedClient) return;
-    document.getElementById('client-details-card').style.display = 'block';
-    document.getElementById('detail-client-name').innerText = state.selectedClient.name;
-    document.getElementById('detail-client-email').innerText = state.selectedClient.email;
+    const c = state.selectedClient;
     
-    const pList = document.getElementById('client-projects-list');
+    document.getElementById('client-details-card').style.display = 'block';
+    document.getElementById('detail-client-name').innerText = c.name;
+    document.getElementById('detail-client-email').innerText = c.email || 'Sin contacto';
+    
+    const initials = c.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('detail-client-avatar').innerText = initials;
+    
     const projs = state.projects.filter(p => p.clientId === id);
-    pList.innerHTML = projs.map(p => `
-        <li class="order-item">
-            <div class="order-info"><strong>${p.name}</strong><span>${p.date} · <span style="color:var(--accent2)">${p.status}</span></span></div>
-        </li>
-    `).join('') || '<li class="order-item text-muted" style="justify-content:center;">Sin proyectos</li>';
+    document.getElementById('detail-proj-count').innerText = projs.length;
+    
+    // Calculate revenue from linked designs
+    let revenue = 0;
+    projs.forEach(p => {
+        p.linkedDesigns.forEach(dId => {
+            const d = state.designs.find(x => x.id == dId);
+            if(d) revenue += d.price;
+        });
+    });
+    document.getElementById('detail-revenue').innerText = `€${revenue.toFixed(0)}`;
+    
+    const lastProj = projs.sort((a,b) => b.date.localeCompare(a.date))[0];
+    document.getElementById('detail-last-date').innerText = lastProj ? lastProj.date : '—';
+    
+    const statusMap = { draft: ['Borrador','var(--text-muted)'], pending: ['Pendiente','var(--yellow)'], in_progress: ['En proceso','var(--blue)'], done: ['Completado','var(--green)'] };
+    const pList = document.getElementById('client-projects-list');
+    pList.innerHTML = projs.map(p => {
+        const [label, color] = statusMap[p.status] || ['—','var(--text-muted)'];
+        return `
+            <div class="order-item" onclick="window.openProjectModal(${p.id})" style="cursor:pointer;">
+                <div class="order-info">
+                    <strong><i class="fas ${p.type === 'painting' ? 'fa-palette' : 'fa-microchip'}" style="color:var(--text-muted);font-size:0.7rem;margin-right:4px;"></i>${p.name}</strong>
+                    <span>${p.date}</span>
+                </div>
+                <span style="font-size:0.65rem;font-weight:700;color:${color};">${label}</span>
+            </div>
+        `;
+    }).join('') || '<p class="text-muted" style="font-size:0.75rem;text-align:center;padding:0.5rem;">Sin proyectos</p>';
+};
+
+window.deleteClient = () => {
+    if(!state.selectedClient) return;
+    if(!confirm(`¿Eliminar a ${state.selectedClient.name}?`)) return;
+    state.clients = state.clients.filter(c => c.id !== state.selectedClient.id);
+    state.selectedClient = null;
+    document.getElementById('client-details-card').style.display = 'none';
+    saveState();
 };
 
 window.closeClientDetails = () => {

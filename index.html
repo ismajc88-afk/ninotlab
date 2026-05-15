@@ -333,11 +333,11 @@
             </div>
             <div class="inventory-grid" id="inventory-container"></div>
 
-            <div class="view-header" style="margin-top:2.5rem;">
-                <h2 style="font-size:1.4rem;">Simulador de Producción</h2>
+            <div class="view-header" style="margin-top:1.5rem;">
+                <h2 style="font-size:1.1rem;">Simulador de Producción</h2>
             </div>
             <div class="card">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
                     <div class="input-group"><label>Diseño a imprimir</label><select id="sim-design-select"></select></div>
                     <div class="input-group"><label>Bobina disponible</label><select id="sim-spool-select"></select></div>
                 </div>
@@ -351,24 +351,56 @@
                 <h2>Clientes</h2>
                 <button class="btn-primary" onclick="window.addClient()"><i class="fas fa-plus"></i> Nuevo Cliente</button>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+            <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1rem;">
+                <div class="kpi-card kpi-blue">
+                    <div class="kpi-icon"><i class="fas fa-users"></i></div>
+                    <div><div class="kpi-label">Total Clientes</div><div class="kpi-value" id="clients-total">0</div></div>
+                </div>
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-icon"><i class="fas fa-briefcase"></i></div>
+                    <div><div class="kpi-label">Con Proyectos Activos</div><div class="kpi-value" id="clients-active">0</div></div>
+                </div>
+                <div class="kpi-card kpi-purple">
+                    <div class="kpi-icon"><i class="fas fa-star"></i></div>
+                    <div><div class="kpi-label">Mejor Cliente</div><div class="kpi-value" id="clients-top" style="font-size:0.85rem;">—</div></div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:0.75rem;">
                 <div class="card">
-                    <h3><i class="fas fa-users"></i> Lista de Clientes</h3>
-                    <ul class="order-list" id="clients-list"></ul>
+                    <h3><i class="fas fa-address-book"></i> Directorio</h3>
+                    <div id="clients-list" style="display:flex;flex-direction:column;gap:5px;"></div>
                 </div>
                 <div class="card" id="client-details-card" style="display:none;">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
-                        <div>
-                            <h3 style="margin-bottom:0;"><i class="fas fa-user-circle"></i> <span id="detail-client-name"></span></h3>
-                            <p class="text-muted" id="detail-client-email" style="font-size:0.85rem;margin-top:4px;"></p>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div id="detail-client-avatar" style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;color:#fff;flex-shrink:0;"></div>
+                            <div>
+                                <strong id="detail-client-name" style="font-size:0.95rem;"></strong>
+                                <p class="text-muted" id="detail-client-email" style="font-size:0.7rem;margin-top:1px;"></p>
+                            </div>
                         </div>
-                        <div style="display:flex;gap:8px;align-items:center;">
-                            <button class="btn-primary" onclick="window.newBudget()" style="padding:8px 14px;font-size:0.85rem;"><i class="fas fa-file-invoice-dollar"></i> Presupuesto</button>
+                        <div style="display:flex;gap:5px;">
+                            <button class="btn-primary" onclick="window.newBudget()" style="padding:5px 10px;font-size:0.72rem;"><i class="fas fa-plus"></i> Proyecto</button>
+                            <button class="btn-icon" onclick="window.deleteClient()" style="color:var(--red);"><i class="fas fa-trash"></i></button>
                             <button class="btn-icon" onclick="window.closeClientDetails()"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
-                    <h4 style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem;">PROYECTOS</h4>
-                    <ul class="order-list" id="client-projects-list"></ul>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:0.75rem;">
+                        <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
+                            <div class="ps-label">Proyectos</div>
+                            <strong id="detail-proj-count" style="font-size:1rem;">0</strong>
+                        </div>
+                        <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
+                            <div class="ps-label">Facturado</div>
+                            <strong id="detail-revenue" style="font-size:1rem;color:var(--green);">€0</strong>
+                        </div>
+                        <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
+                            <div class="ps-label">Último</div>
+                            <strong id="detail-last-date" style="font-size:0.75rem;">—</strong>
+                        </div>
+                    </div>
+                    <h4 style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--text-muted);margin-bottom:0.4rem;">Historial de Proyectos</h4>
+                    <div id="client-projects-list" style="display:flex;flex-direction:column;gap:4px;"></div>
                 </div>
             </div>
         </section>
