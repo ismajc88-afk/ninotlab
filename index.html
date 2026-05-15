@@ -41,11 +41,12 @@
     <!-- ── Main ── -->
     <main class="content">
         <header>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <button id="mobile-menu-btn" class="btn-icon" style="display: none;"><i class="fas fa-bars"></i></button>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+                <button id="mobile-menu-btn" class="btn-icon" style="display:none;"><i class="fas fa-bars"></i></button>
                 <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="global-search" placeholder="Buscar diseños, clientes, proyectos...">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="global-search" placeholder="Buscar...">
+                </div>
             </div>
             <div class="user-profile">
                 <div class="notifications"><i class="fas fa-bell"></i></div>
@@ -137,27 +138,25 @@
                     <div class="kanban-bar" id="dash-kanban-bar" style="margin-top:1.5rem;"></div>
                 </div>
 
-                <div class="card" style="grid-column: span 2;">
-                    <h3><i class="fas fa-chart-line"></i> Rendimiento del Negocio (Últimos 30 días)</h3>
-                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:1rem; margin-top:1rem;">
-                        <div style="text-align:center; padding:1rem; background:rgba(16,185,129,0.05); border-radius:12px;">
-                            <span class="ps-label" style="display:block; margin-bottom:5px;">Ingresos</span>
-                            <strong style="font-size:1.5rem; color:var(--green);" id="stats-revenue">€0.00</strong>
+                <div class="card" style="grid-column: span 3;">
+                    <h3><i class="fas fa-chart-line"></i> Rendimiento (30 días)</h3>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;">
+                        <div style="text-align:center;padding:0.5rem;background:rgba(34,197,94,0.05);border-radius:8px;">
+                            <span class="ps-label" style="display:block;margin-bottom:2px;">Ingresos</span>
+                            <strong style="font-size:1.15rem;color:var(--green);" id="stats-revenue">€0.00</strong>
                         </div>
-                        <div style="text-align:center; padding:1rem; background:rgba(239,68,68,0.05); border-radius:12px;">
-                            <span class="ps-label" style="display:block; margin-bottom:5px;">Gastos</span>
-                            <strong style="font-size:1.5rem; color:var(--red);" id="stats-expenses">€0.00</strong>
+                        <div style="text-align:center;padding:0.5rem;background:rgba(239,68,68,0.05);border-radius:8px;">
+                            <span class="ps-label" style="display:block;margin-bottom:2px;">Gastos</span>
+                            <strong style="font-size:1.15rem;color:var(--red);" id="stats-expenses">€0.00</strong>
                         </div>
-                        <div style="text-align:center; padding:1rem; background:rgba(99,102,241,0.05); border-radius:12px;">
-                            <span class="ps-label" style="display:block; margin-bottom:5px;">Beneficio Neto</span>
-                            <strong style="font-size:1.5rem; color:var(--accent2);" id="stats-profit">€0.00</strong>
+                        <div style="text-align:center;padding:0.5rem;background:rgba(99,102,241,0.05);border-radius:8px;">
+                            <span class="ps-label" style="display:block;margin-bottom:2px;">Beneficio</span>
+                            <strong style="font-size:1.15rem;color:var(--accent2);" id="stats-profit">€0.00</strong>
                         </div>
-                        <div style="text-align:center; padding:1rem; background:rgba(168,85,247,0.05); border-radius:12px;">
-                            <span class="ps-label" style="display:block; margin-bottom:5px;">Tasa Conversión</span>
-                            <strong style="font-size:1.5rem; color:var(--purple);" id="stats-conv">0%</strong>
+                        <div style="text-align:center;padding:0.5rem;background:rgba(168,85,247,0.05);border-radius:8px;">
+                            <span class="ps-label" style="display:block;margin-bottom:2px;">Conversión</span>
+                            <strong style="font-size:1.15rem;color:var(--purple);" id="stats-conv">0%</strong>
                         </div>
-                    </div>
-                    <div style="margin-top:2rem; height:100px; display:flex; align-items:flex-end; gap:4px;" id="stats-mini-chart">
                     </div>
                 </div>
                 </div>
@@ -172,14 +171,14 @@
             </div>
 
             <!-- Drafts / Presupuestos -->
-            <div style="margin-bottom: 3rem;">
-                <h3 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px;"><i class="fas fa-file-signature" style="color:var(--yellow)"></i> Presupuestos por Confirmar</h3>
+            <div style="margin-bottom:1.25rem;">
+                <h3 style="margin-bottom:0.5rem;border-bottom:1px solid var(--border);padding-bottom:4px;font-size:0.82rem;"><i class="fas fa-file-signature" style="color:var(--yellow)"></i> Presupuestos por Confirmar</h3>
                 <div class="designs-grid" id="drafts-container"></div>
             </div>
 
             <!-- Laboratorio 3D -->
-            <div style="margin-bottom: 3rem;">
-                <h3 style="margin-bottom:1.5rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-microchip" style="color:var(--accent2)"></i> Laboratorio 3D (Impresión)</h3>
+            <div style="margin-bottom:1.25rem;">
+                <h3 style="margin-bottom:0.5rem;display:flex;align-items:center;gap:8px;font-size:0.82rem;"><i class="fas fa-microchip" style="color:var(--accent2)"></i> Laboratorio 3D</h3>
                 <div class="kanban-board">
                     <div class="kanban-column" id="kanban-pending">
                         <h3><span class="col-dot" style="background:var(--yellow)"></span> Pendientes <span class="col-count" id="count-pending">0</span></h3>
@@ -198,7 +197,7 @@
 
             <!-- Taller de Arte -->
             <div>
-                <h3 style="margin-bottom:1.5rem; display:flex; align-items:center; gap:10px;"><i class="fas fa-palette" style="color:var(--purple)"></i> Taller de Arte (Pintura)</h3>
+                <h3 style="margin-bottom:0.5rem;display:flex;align-items:center;gap:8px;font-size:0.82rem;"><i class="fas fa-palette" style="color:var(--purple)"></i> Taller de Arte</h3>
                 <div class="kanban-board">
                     <div class="kanban-column" id="kanban-pending-paint">
                         <h3><span class="col-dot" style="background:var(--yellow)"></span> Pendientes <span class="col-count" id="count-pending-paint">0</span></h3>
