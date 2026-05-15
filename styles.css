@@ -450,6 +450,17 @@ header{
         grid-template-columns: 1fr !important;
     }
     #clients-view .kpi-grid { grid-template-columns: 1fr !important; }
+    /* Project modal: stack */
+    #project-modal .modal-content div[style*="grid-template-columns:1.6fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    #project-modal .modal-content div[style*="grid-template-columns:repeat(5,1fr)"] {
+        grid-template-columns: repeat(3,1fr) !important;
+    }
+    #project-modal .modal-content div[style*="grid-template-columns:repeat(5,1fr)"] > div:nth-child(4),
+    #project-modal .modal-content div[style*="grid-template-columns:repeat(5,1fr)"] > div:nth-child(5) {
+        display: none;
+    }
     /* Finanzas: stack 3 KPIs */
     #finance-view .kpi-grid { grid-template-columns: 1fr !important; }
     /* Simulator: stack selects */

@@ -799,68 +799,119 @@ function renderProjectModal() {
     
     if(!p.tasks) p.tasks = []; if(!p.linkedDesigns) p.linkedDesigns = []; if(!p.sketches) p.sketches = [];
     
+    // Header
     document.getElementById('proj-modal-name').innerText = p.name;
-    document.getElementById('proj-modal-client').innerText = `Cliente: ${p.clientName}`;
-    document.getElementById('proj-modal-time').innerText = `${p.timeLogged || 0}h`;
-    document.getElementById('proj-modal-notes').value = p.notes || '';
-    document.getElementById('proj-modal-artist').value = p.artist || '';
-    document.getElementById('proj-modal-artist-box').style.display = p.type === 'painting' ? 'block' : 'none';
-    document.getElementById('painting-comparison').style.display = p.type === 'painting' ? 'block' : 'none';
+    document.getElementById('proj-modal-client').innerText = `${p.clientName} · ${p.type === 'painting' ? 'Pintura' : 'Impresión 3D'}`;
     
-    // Priority selector
+    const typeIcon = document.getElementById('proj-modal-type-icon');
+    if(p.type === 'painting') {
+        typeIcon.style.background = 'rgba(168,85,247,0.15)';
+        typeIcon.innerHTML = '<i class="fas fa-palette" style="color:var(--purple);"></i>';
+    } else {
+        typeIcon.style.background = 'rgba(99,102,241,0.15)';
+        typeIcon.innerHTML = '<i class="fas fa-microchip" style="color:var(--accent2);"></i>';
+    }
+    
+    // Status badge
+    const statusBadge = document.getElementById('proj-modal-status-badge');
+    const statusStyles = {
+        draft: ['Borrador','rgba(100,116,139,0.15)','var(--text-muted)'],
+        pending: ['Pendiente','rgba(245,158,11,0.15)','var(--yellow)'],
+        in_progress: ['En proceso','rgba(56,189,248,0.15)','var(--blue)'],
+        done: ['Completado','rgba(34,197,94,0.15)','var(--green)']
+    };
+    const [sLabel, sBg, sColor] = statusStyles[p.status] || statusStyles.draft;
+    statusBadge.innerText = sLabel;
+    statusBadge.style.background = sBg;
+    statusBadge.style.color = sColor;
+    
+    // Priority
     document.getElementById('proj-modal-priority').value = p.priority || 'normal';
+    
+    // Stats row
+    document.getElementById('proj-modal-date').innerText = p.date || '—';
+    document.getElementById('proj-modal-deadline').innerText = p.deadline || '—';
+    document.getElementById('proj-modal-time').innerText = `${p.timeLogged || 0}h`;
+    
+    const tasksDone = p.tasks.filter(t => t.done).length;
+    document.getElementById('proj-modal-task-summary').innerText = `${tasksDone}/${p.tasks.length}`;
+    
+    let totalValue = 0;
+    p.linkedDesigns.forEach(dId => { const d = state.designs.find(x => x.id == dId); if(d) totalValue += d.price; });
+    document.getElementById('proj-modal-value').innerText = `€${totalValue.toFixed(0)}`;
+    
+    // Time big display
+    const timeBig = document.getElementById('proj-modal-time-big');
+    if(timeBig) timeBig.innerText = `${p.timeLogged || 0}h`;
     
     // Deadline bar
     const deadlineBar = document.getElementById('proj-modal-deadline-bar');
     if(p.deadline) {
         deadlineBar.style.display = 'flex';
-        document.getElementById('proj-modal-deadline').innerText = p.deadline;
         const daysLeft = Math.ceil((new Date(p.deadline) - Date.now()) / 86400000);
         const daysEl = document.getElementById('proj-modal-days-left');
-        if(daysLeft < 0) { daysEl.innerText = `${Math.abs(daysLeft)}d retrasado`; daysEl.style.color = 'var(--red)'; }
-        else if(daysLeft <= 3) { daysEl.innerText = `${daysLeft}d restantes`; daysEl.style.color = 'var(--yellow)'; }
-        else { daysEl.innerText = `${daysLeft}d restantes`; daysEl.style.color = 'var(--green)'; }
+        if(daysLeft < 0) { daysEl.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:var(--red);"></i> ${Math.abs(daysLeft)} días de retraso`; daysEl.style.color = 'var(--red)'; deadlineBar.style.background = 'rgba(239,68,68,0.08)'; }
+        else if(daysLeft <= 3) { daysEl.innerHTML = `<i class="fas fa-clock" style="color:var(--yellow);"></i> ${daysLeft} días restantes`; daysEl.style.color = 'var(--yellow)'; deadlineBar.style.background = 'rgba(245,158,11,0.06)'; }
+        else { daysEl.innerHTML = `<i class="fas fa-calendar-check" style="color:var(--green);"></i> ${daysLeft} días restantes`; daysEl.style.color = 'var(--green)'; deadlineBar.style.background = 'rgba(34,197,94,0.06)'; }
     } else {
         deadlineBar.style.display = 'none';
     }
     
-    if(p.type === 'painting') {
-        document.getElementById('before-img-container').innerHTML = p.imgBefore ? `<img src="${p.imgBefore}" style="width:100%; height:100%; object-fit:cover;">` : '<i class="fas fa-plus"></i>';
-        document.getElementById('after-img-container').innerHTML = p.imgAfter ? `<img src="${p.imgAfter}" style="width:100%; height:100%; object-fit:cover;">` : '<i class="fas fa-plus"></i>';
-    }
-
-    document.getElementById('proj-modal-checklist').innerHTML = p.tasks.map((t, i) => `
-        <label style="display:flex;align-items:center;gap:8px;font-size:0.9rem; ${t.done ? 'color:var(--text-muted);text-decoration:line-through' : ''}">
-            <input type="checkbox" ${t.done?'checked':''} onchange="window.toggleProjectTask(${i})"> ${t.text}
-        </label>
-    `).join('');
+    // Notes & Artist
+    document.getElementById('proj-modal-notes').value = p.notes || '';
+    document.getElementById('proj-modal-artist').value = p.artist || '';
+    document.getElementById('proj-modal-artist-box').style.display = p.type === 'painting' ? 'block' : 'none';
+    document.getElementById('painting-comparison').style.display = p.type === 'painting' ? 'block' : 'none';
     
+    if(p.type === 'painting') {
+        document.getElementById('before-img-container').innerHTML = p.imgBefore ? `<img src="${p.imgBefore}" style="width:100%;height:100%;object-fit:cover;">` : '<i class="fas fa-plus"></i>';
+        document.getElementById('after-img-container').innerHTML = p.imgAfter ? `<img src="${p.imgAfter}" style="width:100%;height:100%;object-fit:cover;">` : '<i class="fas fa-plus"></i>';
+    }
+    
+    // Progress bar
+    const taskPct = p.tasks.length > 0 ? Math.round((tasksDone / p.tasks.length) * 100) : 0;
+    const progressFill = document.getElementById('proj-modal-progress-fill');
+    if(progressFill) { progressFill.style.width = taskPct + '%'; progressFill.style.background = taskPct === 100 ? 'var(--green)' : 'var(--accent)'; }
+
+    // Checklist
+    document.getElementById('proj-modal-checklist').innerHTML = p.tasks.map((t, i) => `
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;padding:3px 0;cursor:pointer;${t.done ? 'color:var(--text-muted);text-decoration:line-through' : ''}">
+            <input type="checkbox" ${t.done?'checked':''} onchange="window.toggleProjectTask(${i})" style="width:14px;height:14px;"> ${t.text}
+        </label>
+    `).join('') || '<p class="text-muted" style="font-size:0.72rem;">Sin tareas</p>';
+    
+    // Designs
     document.getElementById('proj-modal-designs').innerHTML = p.linkedDesigns.map(dId => {
         const d = state.designs.find(x => x.id == dId);
-        return d ? `<li class="order-item"><div class="order-info"><strong>${d.name}</strong><span>€${d.price.toFixed(2)}</span></div></li>` : '';
-    }).join('') || '<p class="text-muted" style="font-size:0.85rem">Sin diseños vinculados</p>';
+        return d ? `
+            <div class="order-item" style="padding:5px 8px;">
+                <div class="order-info"><strong style="font-size:0.78rem;">${d.name}</strong><span style="font-size:0.65rem;">${d.weight}g · ${d.category}</span></div>
+                <span style="font-size:0.78rem;font-weight:700;color:var(--green);">€${d.price.toFixed(2)}</span>
+            </div>` : '';
+    }).join('') || '<p class="text-muted" style="font-size:0.72rem;">Sin diseños vinculados</p>';
     
     document.getElementById('proj-design-select').innerHTML = state.designs.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
     
-    // Material selection for automation
+    // Material
     const matBox = document.getElementById('proj-material-box');
     const matSelect = document.getElementById('proj-material-select');
     if(matBox && matSelect) {
         matBox.style.display = p.type === 'painting' ? 'none' : 'block';
-        matSelect.innerHTML = `<option value="">Seleccionar filamento...</option>` + state.inventory.map(m => `<option value="${m.id}" ${p.linkedMaterialId == m.id ? 'selected' : ''}>${m.name} (${m.stock}g)</option>`).join('');
+        matSelect.innerHTML = `<option value="">Seleccionar filamento...</option>` + state.inventory.map(m => `<option value="${m.id}" ${p.linkedMaterialId == m.id ? 'selected' : ''}>${m.material || m.name} ${m.color} (${m.current || m.stock}g)</option>`).join('');
     }
     
+    // Sketches
     const sContainer = document.getElementById('proj-modal-sketches');
     if(sContainer) {
         sContainer.innerHTML = p.sketches.map((url, i) => `
-            <div style="position:relative; width:120px; height:120px; border-radius:10px; overflow:hidden; border:1px solid var(--border); flex-shrink:0; group">
-                <img src="${url}" style="width:100%; height:100%; object-fit:cover;">
-                <div style="position:absolute; inset:0; background:rgba(0,0,0,0.4); display:flex; gap:4px; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
-                    <button class="btn-icon" onclick="window.openPaint('${url}', ${i})" style="width:32px; height:32px; background:var(--accent); color:white; border:none;"><i class="fas fa-paintbrush"></i></button>
-                    <button class="btn-icon" onclick="window.removeProjectSketch(${i})" style="width:32px; height:32px; background:var(--red); color:white; border:none;"><i class="fas fa-trash"></i></button>
+            <div style="position:relative;width:90px;height:90px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;">
+                <img src="${url}" style="width:100%;height:100%;object-fit:cover;">
+                <div style="position:absolute;inset:0;background:rgba(0,0,0,0.4);display:flex;gap:3px;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                    <button class="btn-icon" onclick="window.openPaint('${url}',${i})" style="width:26px;height:26px;background:var(--accent);color:white;border:none;font-size:0.65rem;"><i class="fas fa-paintbrush"></i></button>
+                    <button class="btn-icon" onclick="window.removeProjectSketch(${i})" style="width:26px;height:26px;background:var(--red);color:white;border:none;font-size:0.65rem;"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
-        `).join('') || '<p class="text-muted" style="font-size:0.85rem">Sin bocetos</p>';
+        `).join('') || '<p class="text-muted" style="font-size:0.72rem;">Sin bocetos</p>';
     }
 }
 

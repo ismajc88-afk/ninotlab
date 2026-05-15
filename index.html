@@ -678,7 +678,7 @@
                         <div style="font-size: 0.8rem; color: #64748b; line-height: 1.6; font-family: monospace;">
                             <strong>IBAN:</strong> <span id="inv-iban">ES00 1234 5678 9012 3456</span><br>
                             <strong>BIZUM:</strong> <span id="inv-bizum">+34 600 000 000</span><br>
-                            <strong>Titular:</strong> <span id="inv-titular">Ninot Lab</span>
+                                <strong>Titular:</strong> <span id="inv-titular">Ninot Lab</span>
                         </div>
                     </div>
                 </div>
@@ -693,93 +693,151 @@
 
 <!-- Project Detail Modal -->
 <div id="project-modal" class="modal">
-    <div class="modal-content" style="max-width:900px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
-            <div>
-                <h2 id="proj-modal-name" style="font-size:1.15rem;">Proyecto</h2>
-                <p class="text-muted" id="proj-modal-client" style="font-size:0.78rem;"></p>
+    <div class="modal-content" style="max-width:880px;padding:0;overflow:hidden;">
+        <!-- Header -->
+        <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                <div id="proj-modal-type-icon" style="width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;"></div>
+                <div style="min-width:0;">
+                    <h2 id="proj-modal-name" style="font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Proyecto</h2>
+                    <p class="text-muted" id="proj-modal-client" style="font-size:0.7rem;"></p>
+                </div>
             </div>
-            <div style="display:flex;gap:5px;align-items:center;">
-                <select id="proj-modal-priority" class="form-input" style="width:auto;font-size:0.72rem;padding:4px 8px;" onchange="window.saveProjectPriority()">
+            <div style="display:flex;gap:4px;align-items:center;flex-shrink:0;">
+                <span id="proj-modal-status-badge" style="font-size:0.6rem;font-weight:700;padding:3px 8px;border-radius:99px;"></span>
+                <select id="proj-modal-priority" class="form-input" style="width:auto;font-size:0.68rem;padding:3px 6px;border-radius:6px;" onchange="window.saveProjectPriority()">
                     <option value="normal">Normal</option>
                     <option value="high">⚡ Alta</option>
                     <option value="urgent">🔥 Urgente</option>
                     <option value="low">Baja</option>
                 </select>
-                <button class="btn-icon" onclick="window.deleteProject()" style="color:var(--red);" title="Eliminar proyecto"><i class="fas fa-trash"></i></button>
-                <button class="btn-icon" onclick="window.closeProjectModal()"><i class="fas fa-times"></i></button>
+                <button class="btn-icon" onclick="window.deleteProject()" style="color:var(--red);width:28px;height:28px;" title="Eliminar"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+                <button class="btn-icon" onclick="window.closeProjectModal()" style="width:28px;height:28px;"><i class="fas fa-times" style="font-size:0.7rem;"></i></button>
             </div>
         </div>
-        <div id="proj-modal-deadline-bar" style="display:none;background:var(--s2);border-radius:7px;padding:5px 10px;margin-bottom:0.75rem;font-size:0.72rem;display:flex;align-items:center;gap:6px;">
-            <i class="fas fa-calendar-check" style="color:var(--yellow);"></i>
-            <span>Entrega: <strong id="proj-modal-deadline"></strong></span>
-            <span id="proj-modal-days-left" style="margin-left:auto;font-weight:600;"></span>
-        </div>
-        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">
-            <div>
-                <div class="card mb-3">
-                    <h3><i class="fas fa-list-check"></i> Checklist de Producción</h3>
-                    <div id="proj-modal-checklist" style="display:flex;flex-direction:column;gap:8px;"></div>
-                    <div style="display:flex;gap:8px;margin-top:1rem;">
-                        <input type="text" id="proj-new-task" class="form-input" placeholder="Nueva tarea..." style="flex:1;">
-                        <button class="btn-primary" onclick="window.addProjectTask()"><i class="fas fa-plus"></i></button>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3><i class="fas fa-cubes"></i> Diseños Vinculados</h3>
-                    <ul class="order-list" id="proj-modal-designs"></ul>
-                    <div style="display:flex;gap:8px;margin-top:1rem;">
-                        <select id="proj-design-select" class="form-input" style="flex:1;"></select>
-                        <button class="btn-primary" onclick="window.linkDesignToProject()"><i class="fas fa-link"></i></button>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <div class="card mb-3">
-                    <h3><i class="fas fa-stopwatch"></i> Tiempo Registrado</h3>
-                    <div style="font-size:2.5rem;font-weight:800;letter-spacing:-1px;color:var(--accent);" id="proj-modal-time">0h</div>
-                    <div style="display:flex;gap:8px;margin-top:1rem;">
-                        <input type="number" id="proj-add-time" class="form-input" placeholder="Horas..." step="0.5" style="flex:1;">
-                        <button class="btn-secondary" onclick="window.addProjectTime()"><i class="fas fa-plus"></i></button>
-                    </div>
-                </div>
-                <div class="card mb-3">
-                    <h3><i class="fas fa-note-sticky"></i> Notas</h3>
-                    <textarea id="proj-modal-notes" class="form-input" rows="4" placeholder="Detalles del encargo..." onchange="window.saveProjectNotes()"></textarea>
-                </div>
-                <div class="card mb-3" id="proj-modal-artist-box" style="display:none;">
-                    <h3><i class="fas fa-user-pen"></i> Artista Asignado</h3>
-                    <input type="text" id="proj-modal-artist" class="form-input" placeholder="Nombre del artista..." onchange="window.saveProjectArtist()">
-                </div>
 
-                <div id="painting-comparison" style="display:none; margin-bottom:1.5rem;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                        <div class="card" style="padding:10px; text-align:center;">
-                            <span class="ps-label" style="display:block; margin-bottom:8px;">Boceto Antes</span>
-                            <div id="before-img-container" style="height:150px; background:var(--s2); border-radius:8px; overflow:hidden; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="window.uploadPaintingImg('before')">
-                                <i class="fas fa-plus"></i>
-                            </div>
+        <!-- Stats Row -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);">
+            <div style="padding:8px 12px;text-align:center;border-right:1px solid var(--border);">
+                <div class="ps-label">Creado</div>
+                <strong id="proj-modal-date" style="font-size:0.78rem;">—</strong>
+            </div>
+            <div style="padding:8px 12px;text-align:center;border-right:1px solid var(--border);">
+                <div class="ps-label">Entrega</div>
+                <strong id="proj-modal-deadline" style="font-size:0.78rem;">—</strong>
+            </div>
+            <div style="padding:8px 12px;text-align:center;border-right:1px solid var(--border);">
+                <div class="ps-label">Horas</div>
+                <strong id="proj-modal-time" style="font-size:0.9rem;color:var(--accent);">0h</strong>
+            </div>
+            <div style="padding:8px 12px;text-align:center;border-right:1px solid var(--border);">
+                <div class="ps-label">Tareas</div>
+                <strong id="proj-modal-task-summary" style="font-size:0.78rem;">0/0</strong>
+            </div>
+            <div style="padding:8px 12px;text-align:center;">
+                <div class="ps-label">Valor</div>
+                <strong id="proj-modal-value" style="font-size:0.9rem;color:var(--green);">€0</strong>
+            </div>
+        </div>
+
+        <!-- Deadline warning -->
+        <div id="proj-modal-deadline-bar" style="display:none;padding:6px 1.25rem;font-size:0.7rem;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);">
+            <i class="fas fa-calendar-check"></i>
+            <span id="proj-modal-days-left"></span>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:1rem 1.25rem;">
+            <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:0.75rem;">
+                <!-- Left Column -->
+                <div style="display:flex;flex-direction:column;gap:0.6rem;">
+                    <!-- Checklist -->
+                    <div class="card" style="padding:0.75rem;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                            <h3 style="margin:0;"><i class="fas fa-list-check"></i> Checklist</h3>
+                            <div id="proj-modal-progress-bar" style="width:60px;height:4px;background:var(--s3);border-radius:99px;overflow:hidden;"><div id="proj-modal-progress-fill" style="height:100%;background:var(--accent);border-radius:99px;transition:width .3s;"></div></div>
                         </div>
-                        <div class="card" style="padding:10px; text-align:center;">
-                            <span class="ps-label" style="display:block; margin-bottom:8px;">Resultado Después</span>
-                            <div id="after-img-container" style="height:150px; background:var(--s2); border-radius:8px; overflow:hidden; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="window.uploadPaintingImg('after')">
-                                <i class="fas fa-plus"></i>
-                            </div>
+                        <div id="proj-modal-checklist" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;"></div>
+                        <div style="display:flex;gap:5px;margin-top:0.5rem;">
+                            <input type="text" id="proj-new-task" class="form-input" placeholder="Nueva tarea..." style="flex:1;font-size:0.75rem;padding:5px 8px;">
+                            <button class="btn-primary" onclick="window.addProjectTask()" style="padding:5px 10px;font-size:0.72rem;"><i class="fas fa-plus"></i></button>
                         </div>
                     </div>
+
+                    <!-- Linked Designs -->
+                    <div class="card" style="padding:0.75rem;">
+                        <h3 style="margin-bottom:0.4rem;"><i class="fas fa-cubes"></i> Diseños Vinculados</h3>
+                        <div id="proj-modal-designs" style="display:flex;flex-direction:column;gap:3px;max-height:120px;overflow-y:auto;"></div>
+                        <div style="display:flex;gap:5px;margin-top:0.5rem;">
+                            <select id="proj-design-select" class="form-input" style="flex:1;font-size:0.75rem;padding:5px 8px;"></select>
+                            <button class="btn-primary" onclick="window.linkDesignToProject()" style="padding:5px 10px;font-size:0.72rem;"><i class="fas fa-link"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Material (3D only) -->
+                    <div class="card" id="proj-material-box" style="padding:0.75rem;display:none;">
+                        <h3 style="margin-bottom:0.4rem;"><i class="fas fa-spool"></i> Filamento Asignado</h3>
+                        <select id="proj-material-select" class="form-input" style="font-size:0.75rem;padding:5px 8px;" onchange="window.saveProjectMaterial()"></select>
+                    </div>
                 </div>
 
-                <button class="btn-primary" style="width:100%;justify-content:center;" onclick="window.generateProjectInvoice()">
-                    <i class="fas fa-file-invoice-dollar"></i> Generar Presupuesto
-                </button>
+                <!-- Right Column -->
+                <div style="display:flex;flex-direction:column;gap:0.6rem;">
+                    <!-- Time Tracker -->
+                    <div class="card" style="padding:0.75rem;">
+                        <h3 style="margin-bottom:0.4rem;"><i class="fas fa-stopwatch"></i> Tiempo</h3>
+                        <div style="font-size:1.8rem;font-weight:800;letter-spacing:-0.5px;color:var(--accent);margin-bottom:0.4rem;" id="proj-modal-time-big">0h</div>
+                        <div style="display:flex;gap:5px;">
+                            <input type="number" id="proj-add-time" class="form-input" placeholder="Horas" step="0.5" style="flex:1;font-size:0.75rem;padding:5px 8px;">
+                            <button class="btn-secondary" onclick="window.addProjectTime()" style="padding:5px 10px;font-size:0.72rem;"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="card" style="padding:0.75rem;">
+                        <h3 style="margin-bottom:0.4rem;"><i class="fas fa-note-sticky"></i> Notas</h3>
+                        <textarea id="proj-modal-notes" class="form-input" rows="3" placeholder="Detalles del encargo..." onchange="window.saveProjectNotes()" style="font-size:0.75rem;resize:vertical;"></textarea>
+                    </div>
+
+                    <!-- Artist (painting only) -->
+                    <div class="card" id="proj-modal-artist-box" style="padding:0.75rem;display:none;">
+                        <h3 style="margin-bottom:0.4rem;"><i class="fas fa-user-pen"></i> Artista</h3>
+                        <input type="text" id="proj-modal-artist" class="form-input" placeholder="Nombre del artista..." onchange="window.saveProjectArtist()" style="font-size:0.75rem;padding:5px 8px;">
+                    </div>
+
+                    <!-- Before/After (painting only) -->
+                    <div id="painting-comparison" style="display:none;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                            <div class="card" style="padding:6px;text-align:center;">
+                                <span class="ps-label" style="display:block;margin-bottom:4px;">Antes</span>
+                                <div id="before-img-container" style="height:90px;background:var(--s2);border-radius:6px;overflow:hidden;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.7rem;color:var(--text-muted);" onclick="window.uploadPaintingImg('before')">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                            </div>
+                            <div class="card" style="padding:6px;text-align:center;">
+                                <span class="ps-label" style="display:block;margin-bottom:4px;">Después</span>
+                                <div id="after-img-container" style="height:90px;background:var(--s2);border-radius:6px;overflow:hidden;border:1px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.7rem;color:var(--text-muted);" onclick="window.uploadPaintingImg('after')">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Invoice -->
+                    <button class="btn-primary" style="width:100%;justify-content:center;padding:8px;font-size:0.78rem;" onclick="window.generateProjectInvoice()">
+                        <i class="fas fa-file-invoice-dollar"></i> Generar Presupuesto
+                    </button>
+                </div>
             </div>
-        </div>
-        <div class="card" style="margin-top:1.5rem;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                <h3 style="margin-bottom:0;"><i class="fas fa-images"></i> Bocetos y Referencias</h3>
-                <button class="btn-secondary" onclick="window.addProjectSketch()" style="padding:8px 14px;font-size:0.85rem;"><i class="fas fa-plus"></i> Imagen</button>
+
+            <!-- Sketches Gallery -->
+            <div class="card" style="margin-top:0.75rem;padding:0.75rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                    <h3 style="margin:0;"><i class="fas fa-images"></i> Bocetos y Referencias</h3>
+                    <button class="btn-secondary" onclick="window.addProjectSketch()" style="padding:4px 10px;font-size:0.72rem;"><i class="fas fa-plus"></i> Imagen</button>
+                </div>
+                <div id="proj-modal-sketches" style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;min-height:50px;"></div>
             </div>
-            <div id="proj-modal-sketches" style="display:flex;gap:1rem;overflow-x:auto;padding-bottom:4px;min-height:60px;"></div>
         </div>
     </div>
 </div>
