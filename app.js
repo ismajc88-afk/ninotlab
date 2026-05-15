@@ -39,8 +39,11 @@ const state = {
     financeModalType: 'income'
 };
 
-// Initialize App
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
     initTabs();
     initCalculator();
     renderAll();
