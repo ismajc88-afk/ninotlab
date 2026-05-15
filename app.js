@@ -350,41 +350,48 @@ function renderDesigns() {
 
     // Profit margin display
     container.innerHTML = filtered.map(d => {
+        const isClient = state.designViewMode === 'client';
         const margin = d.price > 0 && d.cost > 0 ? Math.round(((d.price - d.cost) / d.cost) * 100) : 0;
         const marginColor = margin > 200 ? 'var(--green)' : margin > 100 ? 'var(--yellow)' : 'var(--red)';
         const projCount = state.projects.filter(p => (p.linkedDesigns || []).includes(d.id)).length;
+        
         return `
             <div class="design-card" style="position:relative;cursor:pointer;" onclick="window.openDesignDetail(${d.id})">
                 <div class="design-img" style="position:relative;">
                     ${d.img ? `<img src="${d.img}" alt="${d.name}">` : `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-muted);"><i class="fas fa-cube" style="font-size:1.5rem;"></i><span style="font-size:0.6rem;">Sin imagen</span></div>`}
+                    ${!isClient ? `
                     <div style="position:absolute;top:5px;right:5px;display:flex;gap:3px;">
                         <button class="btn-icon" onclick="event.stopPropagation();window.editDesign(${d.id})" style="width:24px;height:24px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.6rem;backdrop-filter:blur(4px);"><i class="fas fa-pen"></i></button>
                         <button class="btn-icon" onclick="event.stopPropagation();window.duplicateDesign(${d.id})" style="width:24px;height:24px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.6rem;backdrop-filter:blur(4px);"><i class="fas fa-copy"></i></button>
                         <button class="btn-icon" onclick="event.stopPropagation();window.deleteDesign(${d.id})" style="width:24px;height:24px;background:rgba(239,68,68,0.8);border:none;color:white;font-size:0.6rem;backdrop-filter:blur(4px);"><i class="fas fa-trash"></i></button>
-                    </div>
+                    </div>` : ''}
                 </div>
                 <div class="design-content">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
                         <span class="design-tag">${d.tags || d.category || '—'}</span>
-                        ${projCount > 0 ? `<span style="font-size:0.55rem;color:var(--text-muted);"><i class="fas fa-link"></i> ${projCount}</span>` : ''}
+                        ${!isClient && projCount > 0 ? `<span style="font-size:0.55rem;color:var(--text-muted);"><i class="fas fa-link"></i> ${projCount}</span>` : ''}
                     </div>
                     <h3 style="margin-bottom:4px;font-size:0.85rem;">${d.name}</h3>
                     <div style="font-size:0.68rem;color:var(--text-muted);margin-bottom:6px;">
-                        v${d.version || '1.0'} · ${d.license || 'Estándar'}
+                        ${isClient ? 'Ninot Lab · Pieza artesanal' : `v${d.version || '1.0'} · ${d.license || 'Estándar'}`}
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;font-size:0.72rem;">
+                    <div style="display:grid;grid-template-columns:${isClient ? '1fr 1fr 1fr' : '1fr 1fr 1fr'};gap:3px;font-size:0.72rem;">
                         <div style="text-align:center;background:var(--s2);padding:3px;border-radius:5px;">
                             <div class="ps-label">Peso</div><strong>${d.weight}g</strong>
                         </div>
                         <div style="text-align:center;background:var(--s2);padding:3px;border-radius:5px;">
                             <div class="ps-label">Tiempo</div><strong>${d.time}h</strong>
                         </div>
+                        ${!isClient ? `
                         <div style="text-align:center;background:var(--s2);padding:3px;border-radius:5px;">
                             <div class="ps-label">Margen</div><strong style="color:${marginColor};">${margin}%</strong>
-                        </div>
+                        </div>` : `
+                        <div style="text-align:center;background:var(--s2);padding:3px;border-radius:5px;">
+                            <div class="ps-label">Categoría</div><strong>${d.tags || '—'}</strong>
+                        </div>`}
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
-                        <span style="font-size:0.65rem;color:var(--text-muted);">Coste: €${(d.cost || 0).toFixed(2)}</span>
+                        ${!isClient ? `<span style="font-size:0.65rem;color:var(--text-muted);">Coste: €${(d.cost || 0).toFixed(2)}</span>` : '<span style="font-size:0.65rem;color:var(--text-muted);">Ninot Lab</span>'}
                         <span style="font-size:0.95rem;font-weight:800;color:var(--green);">€${d.price.toFixed(2)}</span>
                     </div>
                 </div>
@@ -465,6 +472,74 @@ window.uploadDesignImg = () => {
 
 // Design Detail Modal
 state.currentDesignDetailId = null;
+state.designViewMode = 'owner'; // 'owner' or 'client'
+
+window.setGlobalViewMode = (mode) => {
+    state.designViewMode = mode;
+    
+    // Update global toggle buttons
+    const clientBtn = document.getElementById('global-mode-client');
+    const ownerBtn = document.getElementById('global-mode-owner');
+    if(mode === 'client') {
+        clientBtn.style.background = 'var(--accent)'; clientBtn.style.color = 'white'; clientBtn.style.borderRadius = '6px';
+        ownerBtn.style.background = 'transparent'; ownerBtn.style.color = 'var(--text-muted)'; ownerBtn.style.borderRadius = '';
+        // Hide KPIs
+        document.querySelector('#designs-view .kpi-grid').style.display = 'none';
+    } else {
+        ownerBtn.style.background = 'var(--accent)'; ownerBtn.style.color = 'white'; ownerBtn.style.borderRadius = '6px';
+        clientBtn.style.background = 'transparent'; clientBtn.style.color = 'var(--text-muted)'; clientBtn.style.borderRadius = '';
+        // Show KPIs
+        document.querySelector('#designs-view .kpi-grid').style.display = '';
+    }
+    
+    // Re-render grid to apply mode
+    renderDesigns();
+};
+
+window.setDesignViewMode = (mode) => {
+    state.designViewMode = mode;
+    const modal = document.getElementById('design-detail-modal');
+    
+    // Toggle owner-only elements
+    modal.querySelectorAll('.design-owner-only').forEach(el => {
+        el.style.display = mode === 'owner' ? '' : 'none';
+    });
+    
+    // Toggle client description
+    document.getElementById('design-client-description').style.display = mode === 'client' ? 'block' : 'none';
+    
+    // Toggle camera button on image
+    const imgDiv = document.getElementById('design-detail-img');
+    const cameraBtn = imgDiv.querySelector('[title*="imagen"]');
+    if(cameraBtn) cameraBtn.style.display = mode === 'owner' ? '' : 'none';
+    
+    // Stats grid: in client mode show 3 columns (weight, time, price)
+    const statsGrid = document.getElementById('design-detail-stats-full');
+    if(mode === 'client') {
+        statsGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    } else {
+        statsGrid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+    }
+    
+    // Toggle button styles
+    const clientBtn = document.getElementById('design-mode-client');
+    const ownerBtn = document.getElementById('design-mode-owner');
+    if(mode === 'client') {
+        clientBtn.style.background = 'var(--accent)'; clientBtn.style.color = 'white'; clientBtn.style.borderRadius = '6px';
+        ownerBtn.style.background = 'transparent'; ownerBtn.style.color = 'var(--text-muted)'; ownerBtn.style.borderRadius = '';
+    } else {
+        ownerBtn.style.background = 'var(--accent)'; ownerBtn.style.color = 'white'; ownerBtn.style.borderRadius = '6px';
+        clientBtn.style.background = 'transparent'; clientBtn.style.color = 'var(--text-muted)'; clientBtn.style.borderRadius = '';
+    }
+    
+    // Also update meta to hide ID in client mode
+    const d = state.designs.find(x => x.id === state.currentDesignDetailId);
+    if(d) {
+        document.getElementById('design-detail-meta').innerText = mode === 'client' 
+            ? `Ninot Lab · Pieza artesanal` 
+            : `v${d.version || '1.0'} · ${d.license || 'Estándar'} · ID: ${d.id}`;
+    }
+};
 
 window.openDesignDetail = (id) => {
     state.currentDesignDetailId = id;
@@ -534,6 +609,7 @@ window.openDesignDetail = (id) => {
     }).join('') || '<p class="text-muted" style="font-size:0.68rem;">Sin proyectos vinculados</p>';
     
     document.getElementById('design-detail-modal').classList.add('active');
+    window.setDesignViewMode(state.designViewMode);
 };
 
 window.editDesignFromDetail = () => {

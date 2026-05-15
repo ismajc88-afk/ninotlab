@@ -313,6 +313,15 @@
                 <select id="design-sort" class="form-input" style="width:auto;font-size:0.75rem;" onchange="window.renderDesigns()">
                     <option value="name">Nombre A-Z</option><option value="price-desc">Precio ↓</option><option value="price-asc">Precio ↑</option><option value="weight">Peso ↓</option><option value="recent">Reciente</option>
                 </select>
+                <!-- Global View Toggle -->
+                <div style="display:flex;background:var(--s2);border-radius:7px;overflow:hidden;font-size:0.65rem;font-weight:600;margin-left:auto;">
+                    <button id="global-mode-client" onclick="window.setGlobalViewMode('client')" style="padding:5px 10px;border:none;cursor:pointer;transition:all .2s;background:transparent;color:var(--text-muted);">
+                        <i class="fas fa-user"></i> Cliente
+                    </button>
+                    <button id="global-mode-owner" onclick="window.setGlobalViewMode('owner')" style="padding:5px 10px;border:none;cursor:pointer;transition:all .2s;background:var(--accent);color:white;border-radius:6px;">
+                        <i class="fas fa-lock"></i> Interno
+                    </button>
+                </div>
             </div>
             <div class="designs-grid" id="designs-container"></div>
         </section>
@@ -955,30 +964,44 @@
 
         <!-- Body -->
         <div style="padding:1rem 1.25rem;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;">
+            <!-- View Toggle -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
                 <div>
                     <h2 id="design-detail-name" style="font-size:1.15rem;margin-bottom:2px;"></h2>
                     <p class="text-muted" id="design-detail-meta" style="font-size:0.7rem;"></p>
                 </div>
-                <div style="display:flex;gap:4px;">
-                    <button class="btn-secondary" onclick="window.editDesignFromDetail()" style="padding:5px 10px;font-size:0.7rem;"><i class="fas fa-pen"></i> Editar</button>
-                    <button class="btn-secondary" onclick="window.duplicateDesignFromDetail()" style="padding:5px 10px;font-size:0.7rem;"><i class="fas fa-copy"></i></button>
-                    <button class="btn-icon" onclick="window.deleteDesignFromDetail()" style="color:var(--red);width:28px;height:28px;"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <!-- Mode Toggle -->
+                    <div id="design-view-toggle" style="display:flex;background:var(--s2);border-radius:7px;overflow:hidden;font-size:0.65rem;font-weight:600;">
+                        <button id="design-mode-client" onclick="window.setDesignViewMode('client')" style="padding:5px 10px;border:none;cursor:pointer;transition:all .2s;background:transparent;color:var(--text-muted);">
+                            <i class="fas fa-user"></i> Cliente
+                        </button>
+                        <button id="design-mode-owner" onclick="window.setDesignViewMode('owner')" style="padding:5px 10px;border:none;cursor:pointer;transition:all .2s;background:var(--accent);color:white;border-radius:6px;">
+                            <i class="fas fa-lock"></i> Interno
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Stats grid -->
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:0.75rem;">
+            <!-- Owner-only actions -->
+            <div class="design-owner-only" style="display:flex;gap:4px;margin-bottom:0.6rem;">
+                <button class="btn-secondary" onclick="window.editDesignFromDetail()" style="padding:5px 10px;font-size:0.7rem;"><i class="fas fa-pen"></i> Editar</button>
+                <button class="btn-secondary" onclick="window.duplicateDesignFromDetail()" style="padding:5px 10px;font-size:0.7rem;"><i class="fas fa-copy"></i> Duplicar</button>
+                <button class="btn-icon" onclick="window.deleteDesignFromDetail()" style="color:var(--red);width:28px;height:28px;"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+            </div>
+
+            <!-- Stats grid - Client sees only weight, time, price -->
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:0.75rem;" id="design-detail-stats-full">
                 <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
                     <div class="ps-label">Peso</div><strong id="design-detail-weight" style="font-size:0.9rem;">—</strong>
                 </div>
                 <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
                     <div class="ps-label">Tiempo</div><strong id="design-detail-time" style="font-size:0.9rem;">—</strong>
                 </div>
-                <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
+                <div class="design-owner-only" style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
                     <div class="ps-label">Coste</div><strong id="design-detail-cost" style="font-size:0.9rem;color:var(--red);">—</strong>
                 </div>
-                <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
+                <div class="design-owner-only" style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
                     <div class="ps-label">Margen</div><strong id="design-detail-margin" style="font-size:0.9rem;">—</strong>
                 </div>
                 <div style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(34,197,94,0.05));border-radius:7px;padding:6px;text-align:center;">
@@ -986,8 +1009,8 @@
                 </div>
             </div>
 
-            <!-- Profitability bar -->
-            <div style="margin-bottom:0.75rem;">
+            <!-- Profitability bar (owner only) -->
+            <div class="design-owner-only" style="margin-bottom:0.75rem;">
                 <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text-muted);margin-bottom:3px;">
                     <span>Rentabilidad</span><span id="design-detail-profit-label">—</span>
                 </div>
@@ -996,14 +1019,25 @@
                 </div>
             </div>
 
-            <!-- Two columns -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
-                <!-- Linked Projects -->
+            <!-- Client-visible description area -->
+            <div id="design-client-description" style="display:none;margin-bottom:0.75rem;">
+                <div class="card" style="padding:0.75rem;">
+                    <h3 style="margin-bottom:0.3rem;font-size:0.78rem;"><i class="fas fa-info-circle"></i> Descripción del producto</h3>
+                    <p id="design-detail-description" style="font-size:0.75rem;color:var(--text-muted);line-height:1.5;">Pieza impresa en 3D de alta calidad. Material PLA premium con acabado profesional.</p>
+                    <div style="display:flex;gap:6px;margin-top:0.5rem;flex-wrap:wrap;">
+                        <span style="font-size:0.6rem;padding:3px 7px;background:var(--s2);border-radius:5px;"><i class="fas fa-check" style="color:var(--green);"></i> Fabricación bajo demanda</span>
+                        <span style="font-size:0.6rem;padding:3px 7px;background:var(--s2);border-radius:5px;"><i class="fas fa-check" style="color:var(--green);"></i> Material premium</span>
+                        <span style="font-size:0.6rem;padding:3px 7px;background:var(--s2);border-radius:5px;"><i class="fas fa-check" style="color:var(--green);"></i> Acabado profesional</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner-only sections -->
+            <div class="design-owner-only" style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
                 <div class="card" style="padding:0.6rem;">
                     <h3 style="margin-bottom:0.4rem;font-size:0.78rem;"><i class="fas fa-folder-open"></i> Proyectos vinculados</h3>
                     <div id="design-detail-projects" style="display:flex;flex-direction:column;gap:3px;max-height:120px;overflow-y:auto;"></div>
                 </div>
-                <!-- Production Info -->
                 <div class="card" style="padding:0.6rem;">
                     <h3 style="margin-bottom:0.4rem;font-size:0.78rem;"><i class="fas fa-industry"></i> Producción</h3>
                     <div style="font-size:0.72rem;display:flex;flex-direction:column;gap:4px;">
