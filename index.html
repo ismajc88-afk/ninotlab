@@ -169,8 +169,27 @@
                 <button class="btn-primary" onclick="window.addProject()"><i class="fas fa-plus"></i> Nuevo Proyecto</button>
             </div>
 
+            <div class="kpi-grid" style="margin-bottom:0.75rem;">
+                <div class="kpi-card kpi-blue">
+                    <div class="kpi-icon"><i class="fas fa-folder-open"></i></div>
+                    <div><div class="kpi-label">Total Proyectos</div><div class="kpi-value" id="proj-kpi-total">0</div></div>
+                </div>
+                <div class="kpi-card kpi-orange">
+                    <div class="kpi-icon"><i class="fas fa-spinner"></i></div>
+                    <div><div class="kpi-label">En Producción</div><div class="kpi-value" id="proj-kpi-active">0</div></div>
+                </div>
+                <div class="kpi-card kpi-green">
+                    <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+                    <div><div class="kpi-label">Tasa Completado</div><div class="kpi-value" id="proj-kpi-rate">0%</div></div>
+                </div>
+                <div class="kpi-card kpi-purple">
+                    <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+                    <div><div class="kpi-label">Horas Totales</div><div class="kpi-value" id="proj-kpi-hours">0h</div></div>
+                </div>
+            </div>
+
             <!-- Drafts / Presupuestos -->
-            <div style="margin-bottom:1.25rem;">
+            <div style="margin-bottom:1rem;">
                 <h3 style="margin-bottom:0.5rem;border-bottom:1px solid var(--border);padding-bottom:4px;font-size:0.82rem;"><i class="fas fa-file-signature" style="color:var(--yellow)"></i> Presupuestos por Confirmar</h3>
                 <div class="designs-grid" id="drafts-container"></div>
             </div>
@@ -675,14 +694,28 @@
 <!-- Project Detail Modal -->
 <div id="project-modal" class="modal">
     <div class="modal-content" style="max-width:900px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2rem;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
             <div>
-                <h2 id="proj-modal-name">Proyecto</h2>
-                <p class="text-muted" id="proj-modal-client" style="font-size:0.9rem;"></p>
+                <h2 id="proj-modal-name" style="font-size:1.15rem;">Proyecto</h2>
+                <p class="text-muted" id="proj-modal-client" style="font-size:0.78rem;"></p>
             </div>
-            <button class="btn-icon" onclick="window.closeProjectModal()"><i class="fas fa-times"></i></button>
+            <div style="display:flex;gap:5px;align-items:center;">
+                <select id="proj-modal-priority" class="form-input" style="width:auto;font-size:0.72rem;padding:4px 8px;" onchange="window.saveProjectPriority()">
+                    <option value="normal">Normal</option>
+                    <option value="high">⚡ Alta</option>
+                    <option value="urgent">🔥 Urgente</option>
+                    <option value="low">Baja</option>
+                </select>
+                <button class="btn-icon" onclick="window.deleteProject()" style="color:var(--red);" title="Eliminar proyecto"><i class="fas fa-trash"></i></button>
+                <button class="btn-icon" onclick="window.closeProjectModal()"><i class="fas fa-times"></i></button>
+            </div>
         </div>
-        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
+        <div id="proj-modal-deadline-bar" style="display:none;background:var(--s2);border-radius:7px;padding:5px 10px;margin-bottom:0.75rem;font-size:0.72rem;display:flex;align-items:center;gap:6px;">
+            <i class="fas fa-calendar-check" style="color:var(--yellow);"></i>
+            <span>Entrega: <strong id="proj-modal-deadline"></strong></span>
+            <span id="proj-modal-days-left" style="margin-left:auto;font-weight:600;"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">
             <div>
                 <div class="card mb-3">
                     <h3><i class="fas fa-list-check"></i> Checklist de Producción</h3>
@@ -753,8 +786,9 @@
 
 <!-- Professional UX Modals -->
 <div id="add-project-modal" class="modal">
-    <div class="modal-content" style="max-width:400px;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;" class="mb-3">
+    <div class="modal-content" style="max-width:420px;">
+        <h2 style="margin-bottom:1rem;font-size:1.1rem;">Nuevo Proyecto</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" class="mb-3">
             <div class="input-group">
                 <label>Tipo de Proyecto</label>
                 <select id="new-proj-type" class="form-input">
@@ -769,9 +803,28 @@
         </div>
         <div class="input-group mb-3" style="width:100%;">
             <label>Nombre del Encargo</label>
-            <input type="text" id="new-proj-name" class="form-input">
+            <input type="text" id="new-proj-name" class="form-input" placeholder="Ej: Ninot Faller v3">
         </div>
-        <div style="display:flex;gap:1rem;margin-top:2rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" class="mb-3">
+            <div class="input-group">
+                <label>Prioridad</label>
+                <select id="new-proj-priority" class="form-input">
+                    <option value="normal">Normal</option>
+                    <option value="high">Alta</option>
+                    <option value="urgent">Urgente</option>
+                    <option value="low">Baja</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Fecha Entrega (opcional)</label>
+                <input type="date" id="new-proj-deadline" class="form-input">
+            </div>
+        </div>
+        <div class="input-group mb-3">
+            <label>Notas iniciales</label>
+            <textarea id="new-proj-notes" class="form-input" rows="2" placeholder="Detalles del encargo..."></textarea>
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:1rem;">
             <button class="btn-secondary" onclick="document.getElementById('add-project-modal').classList.remove('active')" style="flex:1;justify-content:center;">Cancelar</button>
             <button class="btn-primary" onclick="window.confirmAddProject()" style="flex:1;justify-content:center;"><i class="fas fa-save"></i> Crear</button>
         </div>

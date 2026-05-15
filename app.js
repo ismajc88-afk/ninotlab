@@ -614,22 +614,27 @@ function renderProjectsKanban() {
     const colsPaint = { pending: '', in_progress: '', done: '' };
     const counts = { pending: 0, in_progress: 0, done: 0, pendingPaint: 0, progressPaint: 0, donePaint: 0 };
     let draftsHtml = '';
+    let totalHours = 0, doneCount = 0, activeCount = 0;
     
     state.projects.forEach(p => {
+        totalHours += (p.timeLogged || 0);
+        if(p.status === 'done') doneCount++;
+        if(p.status === 'in_progress') activeCount++;
+        
         if (p.status === 'draft') {
             draftsHtml += `
-                <div class="card" style="padding: 1rem; border: 1px dashed var(--accent2); background: var(--surface);">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                        <span class="design-tag" style="margin:0; background:rgba(234, 179, 8, 0.1); color:#eab308;">${p.clientName}</span>
-                        <span style="font-size:0.75rem; color:var(--text-muted);">${p.date}</span>
+                <div class="card" style="padding:0.75rem;border:1px dashed var(--accent2);">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                        <span class="design-tag" style="margin:0;background:rgba(234,179,8,0.1);color:#eab308;">${p.clientName}</span>
+                        <span style="font-size:0.68rem;color:var(--text-muted);">${p.date}</span>
                     </div>
-                    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-                        <i class="fas ${p.type === 'painting' ? 'fa-palette' : 'fa-microchip'}" style="color:var(--text-muted); font-size:0.8rem;"></i>
-                        <h4 style="font-size:1.1rem; font-weight:600; color:var(--text-1); margin:0;">${p.name}</h4>
+                    <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+                        <i class="fas ${p.type === 'painting' ? 'fa-palette' : 'fa-microchip'}" style="color:var(--text-muted);font-size:0.72rem;"></i>
+                        <h4 style="font-size:0.88rem;font-weight:600;color:var(--text-1);margin:0;">${p.name}</h4>
                     </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn-secondary" style="flex:1;" onclick="window.openProjectModal(${p.id})"><i class="fas fa-eye"></i> Ver</button>
-                        <button class="btn-primary" style="flex:1;" onclick="window.changeProjectStatus(${p.id}, 'pending')"><i class="fas fa-check"></i> Confirmar</button>
+                    <div style="display:flex;gap:6px;">
+                        <button class="btn-secondary" style="flex:1;padding:4px;font-size:0.72rem;" onclick="window.openProjectModal(${p.id})"><i class="fas fa-eye"></i> Ver</button>
+                        <button class="btn-primary" style="flex:1;padding:4px;font-size:0.72rem;" onclick="window.changeProjectStatus(${p.id}, 'pending')"><i class="fas fa-check"></i> Confirmar</button>
                     </div>
                 </div>
             `;
@@ -644,17 +649,50 @@ function renderProjectsKanban() {
             else counts.donePaint++;
         }
 
+        const tasks = p.tasks || [];
+        const tasksDone = tasks.filter(t => t.done).length;
+        const taskPct = tasks.length > 0 ? Math.round((tasksDone / tasks.length) * 100) : 0;
+        const linkedCount = (p.linkedDesigns || []).length;
+        let totalValue = 0;
+        (p.linkedDesigns || []).forEach(dId => {
+            const d = state.designs.find(x => x.id == dId);
+            if(d) totalValue += d.price;
+        });
+
+        const priority = p.priority || 'normal';
+        const prioMap = {
+            urgent: '<span style="font-size:0.55rem;font-weight:700;background:rgba(239,68,68,0.15);color:var(--red);padding:1px 4px;border-radius:3px;">URGENTE</span>',
+            high: '<span style="font-size:0.55rem;font-weight:700;background:rgba(245,158,11,0.15);color:var(--yellow);padding:1px 4px;border-radius:3px;">ALTA</span>',
+            normal: '', low: ''
+        };
+
+        const daysSince = Math.floor((Date.now() - new Date(p.date).getTime()) / 86400000);
+        const daysLabel = daysSince === 0 ? 'Hoy' : daysSince === 1 ? 'Ayer' : `${daysSince}d`;
+
         const cardHtml = `
             <div class="kanban-card" onclick="window.openProjectModal(${p.id})">
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span class="design-tag" style="margin:0; ${isPaint ? 'background:rgba(168,85,247,0.12); color:var(--purple);' : ''}">${p.clientName}</span>
-                    <span style="font-size:0.75rem; color:var(--text-muted);">${p.date}</span>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;gap:3px;">
+                        <span class="design-tag" style="margin:0;${isPaint ? 'background:rgba(168,85,247,0.12);color:var(--purple);' : ''}">${p.clientName}</span>
+                        ${prioMap[priority]}
+                    </div>
+                    <span style="font-size:0.6rem;color:var(--text-muted);">${daysLabel}</span>
                 </div>
-                <h4 style="font-size:0.95rem; font-weight:600; margin-bottom:12px; color:var(--text-1);">${p.name}</h4>
-                ${p.artist ? `<div style="font-size:0.75rem; color:var(--purple); margin-bottom:10px;"><i class="fas fa-user-pen"></i> ${p.artist}</div>` : ''}
-                <div style="display:flex; gap:8px;">
-                    ${p.status !== 'pending' ? `<button class="btn-secondary" style="flex:1; padding:6px; font-size:0.8rem" onclick="event.stopPropagation(); window.changeProjectStatus(${p.id}, '${p.status === 'done' ? 'in_progress' : 'pending'}')"><i class="fas fa-arrow-left"></i></button>` : ''}
-                    ${p.status !== 'done' ? `<button class="btn-secondary" style="flex:1; padding:6px; font-size:0.8rem; border-color:var(--accent); color:var(--accent2)" onclick="event.stopPropagation(); window.changeProjectStatus(${p.id}, '${p.status === 'pending' ? 'in_progress' : 'done'}')"><i class="fas fa-arrow-right"></i></button>` : ''}
+                <h4 style="font-size:0.8rem;font-weight:600;margin-bottom:3px;color:var(--text-1);">${p.name}</h4>
+                ${p.artist ? `<div style="font-size:0.62rem;color:var(--purple);margin-bottom:3px;"><i class="fas fa-user-pen"></i> ${p.artist}</div>` : ''}
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;">
+                    ${p.timeLogged ? `<span style="font-size:0.6rem;color:var(--text-muted);"><i class="fas fa-clock" style="margin-right:2px;"></i>${p.timeLogged}h</span>` : ''}
+                    ${linkedCount > 0 ? `<span style="font-size:0.6rem;color:var(--text-muted);"><i class="fas fa-cube" style="margin-right:2px;"></i>${linkedCount}</span>` : ''}
+                    ${totalValue > 0 ? `<span style="font-size:0.6rem;color:var(--green);font-weight:600;">€${totalValue.toFixed(0)}</span>` : ''}
+                </div>
+                ${tasks.length > 0 ? `
+                <div style="margin-bottom:5px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.55rem;color:var(--text-muted);margin-bottom:2px;"><span>Checklist</span><span>${tasksDone}/${tasks.length}</span></div>
+                    <div style="height:3px;background:var(--s3);border-radius:99px;overflow:hidden;"><div style="height:100%;width:${taskPct}%;background:${taskPct===100?'var(--green)':'var(--accent)'};border-radius:99px;"></div></div>
+                </div>` : ''}
+                <div style="display:flex;gap:4px;">
+                    ${p.status !== 'pending' ? `<button class="btn-secondary" style="flex:1;padding:3px;font-size:0.7rem" onclick="event.stopPropagation();window.changeProjectStatus(${p.id},'${p.status === 'done' ? 'in_progress' : 'pending'}')"><i class="fas fa-arrow-left"></i></button>` : ''}
+                    ${p.status !== 'done' ? `<button class="btn-secondary" style="flex:1;padding:3px;font-size:0.7rem;border-color:var(--accent);color:var(--accent2)" onclick="event.stopPropagation();window.changeProjectStatus(${p.id},'${p.status === 'pending' ? 'in_progress' : 'done'}')"><i class="fas fa-arrow-right"></i></button>` : ''}
                 </div>
             </div>
         `;
@@ -663,9 +701,15 @@ function renderProjectsKanban() {
         else cols3D[p.status] += cardHtml;
     });
     
-    document.getElementById('drafts-container').innerHTML = draftsHtml || '<p class="text-muted" style="grid-column: 1 / -1;">No hay presupuestos pendientes de confirmación.</p>';
+    // KPIs
+    const total = state.projects.length;
+    document.getElementById('proj-kpi-total').innerText = total;
+    document.getElementById('proj-kpi-active').innerText = activeCount;
+    document.getElementById('proj-kpi-rate').innerText = total > 0 ? Math.round((doneCount / total) * 100) + '%' : '0%';
+    document.getElementById('proj-kpi-hours').innerText = totalHours + 'h';
     
-    // Counts
+    document.getElementById('drafts-container').innerHTML = draftsHtml || '<p class="text-muted" style="grid-column:1/-1;font-size:0.75rem;">No hay presupuestos pendientes.</p>';
+    
     document.getElementById('count-pending').innerText = counts.pending;
     document.getElementById('count-progress').innerText = counts.in_progress;
     document.getElementById('count-done').innerText = counts.done;
@@ -673,12 +717,9 @@ function renderProjectsKanban() {
     document.getElementById('count-progress-paint').innerText = counts.progressPaint;
     document.getElementById('count-done-paint').innerText = counts.donePaint;
     
-    // 3D Columns
     document.querySelector('#kanban-pending .kanban-cards').innerHTML = cols3D.pending;
     document.querySelector('#kanban-progress .kanban-cards').innerHTML = cols3D.in_progress;
     document.querySelector('#kanban-done .kanban-cards').innerHTML = cols3D.done;
-
-    // Paint Columns
     document.querySelector('#kanban-pending-paint .kanban-cards').innerHTML = colsPaint.pending;
     document.querySelector('#kanban-progress-paint .kanban-cards').innerHTML = colsPaint.in_progress;
     document.querySelector('#kanban-done-paint .kanban-cards').innerHTML = colsPaint.done;
@@ -725,11 +766,18 @@ window.confirmAddProject = () => {
     const client = state.clients.find(c => c.id === clientId);
     const name = document.getElementById('new-proj-name').value;
     const type = document.getElementById('new-proj-type').value;
+    const priority = document.getElementById('new-proj-priority').value;
+    const deadline = document.getElementById('new-proj-deadline').value;
+    const notes = document.getElementById('new-proj-notes').value;
     
     if(!client || !name) { alert("Datos inválidos"); return; }
     
     state.projects.push({
-        id: Date.now(), clientId: client.id, clientName: client.name, name, type, date: new Date().toISOString().split('T')[0], status: 'draft', tasks: [], linkedDesigns: [], timeLogged: 0, notes: '', sketches: [], artist: '', imgBefore: null, imgAfter: null
+        id: Date.now(), clientId: client.id, clientName: client.name, name, type,
+        date: new Date().toISOString().split('T')[0], status: 'draft',
+        priority, deadline: deadline || null, notes: notes || '',
+        tasks: [], linkedDesigns: [], timeLogged: 0, sketches: [],
+        artist: '', imgBefore: null, imgAfter: null
     });
     saveState();
     document.getElementById('add-project-modal').classList.remove('active');
@@ -758,6 +806,23 @@ function renderProjectModal() {
     document.getElementById('proj-modal-artist').value = p.artist || '';
     document.getElementById('proj-modal-artist-box').style.display = p.type === 'painting' ? 'block' : 'none';
     document.getElementById('painting-comparison').style.display = p.type === 'painting' ? 'block' : 'none';
+    
+    // Priority selector
+    document.getElementById('proj-modal-priority').value = p.priority || 'normal';
+    
+    // Deadline bar
+    const deadlineBar = document.getElementById('proj-modal-deadline-bar');
+    if(p.deadline) {
+        deadlineBar.style.display = 'flex';
+        document.getElementById('proj-modal-deadline').innerText = p.deadline;
+        const daysLeft = Math.ceil((new Date(p.deadline) - Date.now()) / 86400000);
+        const daysEl = document.getElementById('proj-modal-days-left');
+        if(daysLeft < 0) { daysEl.innerText = `${Math.abs(daysLeft)}d retrasado`; daysEl.style.color = 'var(--red)'; }
+        else if(daysLeft <= 3) { daysEl.innerText = `${daysLeft}d restantes`; daysEl.style.color = 'var(--yellow)'; }
+        else { daysEl.innerText = `${daysLeft}d restantes`; daysEl.style.color = 'var(--green)'; }
+    } else {
+        deadlineBar.style.display = 'none';
+    }
     
     if(p.type === 'painting') {
         document.getElementById('before-img-container').innerHTML = p.imgBefore ? `<img src="${p.imgBefore}" style="width:100%; height:100%; object-fit:cover;">` : '<i class="fas fa-plus"></i>';
@@ -826,6 +891,20 @@ window.addProjectTime = () => {
         document.getElementById('proj-add-time').value = ''; 
         saveState(); renderProjectModal(); 
     }
+};
+
+window.saveProjectPriority = () => {
+    const p = state.projects.find(x => x.id === state.currentProjectModalId);
+    if(p) { p.priority = document.getElementById('proj-modal-priority').value; saveState(); }
+};
+
+window.deleteProject = () => {
+    const p = state.projects.find(x => x.id === state.currentProjectModalId);
+    if(!p) return;
+    if(!confirm(`¿Eliminar el proyecto "${p.name}"? Esta acción no se puede deshacer.`)) return;
+    state.projects = state.projects.filter(x => x.id !== p.id);
+    saveState();
+    document.getElementById('project-modal').classList.remove('active');
 };
 
 window.saveProjectNotes = () => {
