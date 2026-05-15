@@ -354,7 +354,7 @@ function renderDesigns() {
         const marginColor = margin > 200 ? 'var(--green)' : margin > 100 ? 'var(--yellow)' : 'var(--red)';
         const projCount = state.projects.filter(p => (p.linkedDesigns || []).includes(d.id)).length;
         return `
-            <div class="design-card" style="position:relative;">
+            <div class="design-card" style="position:relative;cursor:pointer;" onclick="window.openDesignDetail(${d.id})">
                 <div class="design-img" style="position:relative;">
                     ${d.img ? `<img src="${d.img}" alt="${d.name}">` : `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-muted);"><i class="fas fa-cube" style="font-size:1.5rem;"></i><span style="font-size:0.6rem;">Sin imagen</span></div>`}
                     <div style="position:absolute;top:5px;right:5px;display:flex;gap:3px;">
@@ -458,6 +458,115 @@ window.uploadDesignImg = () => {
         if(!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => { document.getElementById('new-design-img').value = ev.target.result; };
+        reader.readAsDataURL(file);
+    };
+    input.click();
+};
+
+// Design Detail Modal
+state.currentDesignDetailId = null;
+
+window.openDesignDetail = (id) => {
+    state.currentDesignDetailId = id;
+    const d = state.designs.find(x => x.id === id);
+    if(!d) return;
+    
+    // Image
+    const imgContainer = document.getElementById('design-detail-img');
+    if(d.img) {
+        imgContainer.innerHTML = `
+            <img src="${d.img}" style="width:100%;height:100%;object-fit:cover;">
+            <div style="position:absolute;top:10px;right:10px;display:flex;gap:4px;">
+                <button class="btn-icon" onclick="window.changeDesignImg()" style="width:30px;height:30px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.7rem;backdrop-filter:blur(4px);border-radius:6px;" title="Cambiar imagen"><i class="fas fa-camera"></i></button>
+                <button class="btn-icon" onclick="document.getElementById('design-detail-modal').classList.remove('active')" style="width:30px;height:30px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.7rem;backdrop-filter:blur(4px);border-radius:6px;"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="position:absolute;bottom:10px;left:12px;"><span class="design-tag" style="font-size:0.65rem;">${d.tags || '—'}</span></div>`;
+    } else {
+        imgContainer.innerHTML = `
+            <i class="fas fa-cube" style="font-size:3rem;color:var(--text-muted);"></i>
+            <div style="position:absolute;top:10px;right:10px;display:flex;gap:4px;">
+                <button class="btn-icon" onclick="window.changeDesignImg()" style="width:30px;height:30px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.7rem;backdrop-filter:blur(4px);border-radius:6px;" title="Añadir imagen"><i class="fas fa-camera"></i></button>
+                <button class="btn-icon" onclick="document.getElementById('design-detail-modal').classList.remove('active')" style="width:30px;height:30px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.7rem;backdrop-filter:blur(4px);border-radius:6px;"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="position:absolute;bottom:10px;left:12px;"><span class="design-tag" style="font-size:0.65rem;">${d.tags || '—'}</span></div>`;
+    }
+    
+    // Name & meta
+    document.getElementById('design-detail-name').innerText = d.name;
+    document.getElementById('design-detail-meta').innerText = `v${d.version || '1.0'} · ${d.license || 'Estándar'} · ID: ${d.id}`;
+    
+    // Stats
+    document.getElementById('design-detail-weight').innerText = `${d.weight}g`;
+    document.getElementById('design-detail-time').innerText = `${d.time}h`;
+    document.getElementById('design-detail-cost').innerText = `€${(d.cost || 0).toFixed(2)}`;
+    document.getElementById('design-detail-price').innerText = `€${d.price.toFixed(2)}`;
+    
+    const margin = d.price > 0 && d.cost > 0 ? Math.round(((d.price - d.cost) / d.cost) * 100) : 0;
+    const marginColor = margin > 200 ? 'var(--green)' : margin > 100 ? 'var(--yellow)' : 'var(--red)';
+    document.getElementById('design-detail-margin').innerText = `${margin}%`;
+    document.getElementById('design-detail-margin').style.color = marginColor;
+    
+    // Profit bar
+    const profitPct = Math.min(margin, 400) / 4; // normalize to 0-100
+    document.getElementById('design-detail-profit-bar').style.width = profitPct + '%';
+    document.getElementById('design-detail-profit-bar').style.background = marginColor;
+    const profit = d.price - (d.cost || 0);
+    document.getElementById('design-detail-profit-label').innerText = `€${profit.toFixed(2)} beneficio por unidad`;
+    
+    // Production data
+    document.getElementById('design-detail-filament').innerText = `${d.weight}g`;
+    const elecCost = (d.time * 0.3 * 0.18).toFixed(2); // 300W * €0.18/kWh
+    document.getElementById('design-detail-elec').innerText = `€${elecCost}`;
+    
+    // Linked projects
+    const linkedProjects = state.projects.filter(p => (p.linkedDesigns || []).includes(d.id));
+    document.getElementById('design-detail-prints').innerText = linkedProjects.filter(p => p.status === 'done').length;
+    document.getElementById('design-detail-revenue').innerText = `€${(linkedProjects.filter(p => p.status === 'done').length * d.price).toFixed(2)}`;
+    
+    const projContainer = document.getElementById('design-detail-projects');
+    projContainer.innerHTML = linkedProjects.map(p => {
+        const statusColors = { draft: 'var(--text-muted)', pending: 'var(--yellow)', in_progress: 'var(--blue)', done: 'var(--green)' };
+        return `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 6px;background:var(--s2);border-radius:5px;font-size:0.7rem;">
+                <span><strong>${p.name}</strong> <span class="text-muted">· ${p.clientName}</span></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:${statusColors[p.status] || 'var(--text-muted)'};flex-shrink:0;"></span>
+            </div>`;
+    }).join('') || '<p class="text-muted" style="font-size:0.68rem;">Sin proyectos vinculados</p>';
+    
+    document.getElementById('design-detail-modal').classList.add('active');
+};
+
+window.editDesignFromDetail = () => {
+    const d = state.designs.find(x => x.id === state.currentDesignDetailId);
+    if(!d) return;
+    window.editDesign(d.id);
+    window.openDesignDetail(d.id); // refresh
+};
+
+window.duplicateDesignFromDetail = () => {
+    window.duplicateDesign(state.currentDesignDetailId);
+    document.getElementById('design-detail-modal').classList.remove('active');
+};
+
+window.deleteDesignFromDetail = () => {
+    window.deleteDesign(state.currentDesignDetailId);
+    document.getElementById('design-detail-modal').classList.remove('active');
+};
+
+window.changeDesignImg = () => {
+    const d = state.designs.find(x => x.id === state.currentDesignDetailId);
+    if(!d) return;
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            d.img = ev.target.result;
+            saveState();
+            window.openDesignDetail(d.id); // refresh modal
+        };
         reader.readAsDataURL(file);
     };
     input.click();

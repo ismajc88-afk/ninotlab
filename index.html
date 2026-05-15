@@ -938,6 +938,86 @@
     </div>
 </div>
 
+<!-- Design Detail Modal -->
+<div id="design-detail-modal" class="modal">
+    <div class="modal-content" style="max-width:680px;padding:0;overflow:hidden;">
+        <!-- Header with image -->
+        <div id="design-detail-img" style="height:180px;background:var(--s2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+            <i class="fas fa-cube" style="font-size:3rem;color:var(--text-muted);"></i>
+            <div style="position:absolute;top:10px;right:10px;display:flex;gap:4px;">
+                <button class="btn-icon" onclick="window.changeDesignImg()" style="width:30px;height:30px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.7rem;backdrop-filter:blur(4px);border-radius:6px;" title="Cambiar imagen"><i class="fas fa-camera"></i></button>
+                <button class="btn-icon" onclick="document.getElementById('design-detail-modal').classList.remove('active')" style="width:30px;height:30px;background:rgba(0,0,0,0.6);border:none;color:white;font-size:0.7rem;backdrop-filter:blur(4px);border-radius:6px;"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="position:absolute;bottom:10px;left:12px;">
+                <span id="design-detail-tag" class="design-tag" style="font-size:0.65rem;"></span>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:1rem 1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;">
+                <div>
+                    <h2 id="design-detail-name" style="font-size:1.15rem;margin-bottom:2px;"></h2>
+                    <p class="text-muted" id="design-detail-meta" style="font-size:0.7rem;"></p>
+                </div>
+                <div style="display:flex;gap:4px;">
+                    <button class="btn-secondary" onclick="window.editDesignFromDetail()" style="padding:5px 10px;font-size:0.7rem;"><i class="fas fa-pen"></i> Editar</button>
+                    <button class="btn-secondary" onclick="window.duplicateDesignFromDetail()" style="padding:5px 10px;font-size:0.7rem;"><i class="fas fa-copy"></i></button>
+                    <button class="btn-icon" onclick="window.deleteDesignFromDetail()" style="color:var(--red);width:28px;height:28px;"><i class="fas fa-trash" style="font-size:0.7rem;"></i></button>
+                </div>
+            </div>
+
+            <!-- Stats grid -->
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:0.75rem;">
+                <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
+                    <div class="ps-label">Peso</div><strong id="design-detail-weight" style="font-size:0.9rem;">—</strong>
+                </div>
+                <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
+                    <div class="ps-label">Tiempo</div><strong id="design-detail-time" style="font-size:0.9rem;">—</strong>
+                </div>
+                <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
+                    <div class="ps-label">Coste</div><strong id="design-detail-cost" style="font-size:0.9rem;color:var(--red);">—</strong>
+                </div>
+                <div style="background:var(--s2);border-radius:7px;padding:6px;text-align:center;">
+                    <div class="ps-label">Margen</div><strong id="design-detail-margin" style="font-size:0.9rem;">—</strong>
+                </div>
+                <div style="background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(34,197,94,0.05));border-radius:7px;padding:6px;text-align:center;">
+                    <div class="ps-label">Precio</div><strong id="design-detail-price" style="font-size:1rem;color:var(--green);">—</strong>
+                </div>
+            </div>
+
+            <!-- Profitability bar -->
+            <div style="margin-bottom:0.75rem;">
+                <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text-muted);margin-bottom:3px;">
+                    <span>Rentabilidad</span><span id="design-detail-profit-label">—</span>
+                </div>
+                <div style="height:5px;background:var(--s3);border-radius:99px;overflow:hidden;">
+                    <div id="design-detail-profit-bar" style="height:100%;border-radius:99px;transition:width .3s;"></div>
+                </div>
+            </div>
+
+            <!-- Two columns -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
+                <!-- Linked Projects -->
+                <div class="card" style="padding:0.6rem;">
+                    <h3 style="margin-bottom:0.4rem;font-size:0.78rem;"><i class="fas fa-folder-open"></i> Proyectos vinculados</h3>
+                    <div id="design-detail-projects" style="display:flex;flex-direction:column;gap:3px;max-height:120px;overflow-y:auto;"></div>
+                </div>
+                <!-- Production Info -->
+                <div class="card" style="padding:0.6rem;">
+                    <h3 style="margin-bottom:0.4rem;font-size:0.78rem;"><i class="fas fa-industry"></i> Producción</h3>
+                    <div style="font-size:0.72rem;display:flex;flex-direction:column;gap:4px;">
+                        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Filamento necesario</span><strong id="design-detail-filament">—</strong></div>
+                        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Coste electricidad</span><strong id="design-detail-elec">—</strong></div>
+                        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Impresiones realizadas</span><strong id="design-detail-prints">0</strong></div>
+                        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Ingresos totales</span><strong id="design-detail-revenue" style="color:var(--green);">€0</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="add-design-modal" class="modal">
     <div class="modal-content" style="max-width:440px;">
         <h2 style="margin-bottom:1rem;font-size:1.1rem;">Nuevo Diseño</h2>

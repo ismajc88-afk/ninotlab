@@ -463,6 +463,13 @@ header{
     }
     /* Finanzas: stack 3 KPIs */
     #finance-view .kpi-grid { grid-template-columns: 1fr !important; }
+    /* Design detail: stack */
+    #design-detail-modal .modal-content div[style*="grid-template-columns:repeat(5,1fr)"] {
+        grid-template-columns: repeat(3,1fr) !important;
+    }
+    #design-detail-modal .modal-content div[style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
     /* Simulator: stack selects */
     #inventory-view .card div[style*="grid-template-columns:1fr 1fr"] {
         grid-template-columns: 1fr !important;
