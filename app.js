@@ -264,6 +264,8 @@ function initCalculator() {
     window.calculate = () => {
         const mode = document.getElementById('calc-mode').value;
         let html = '';
+        let badgeText = 'Rentable';
+        let badgeColor = 'var(--green)';
 
         if(mode === '3d') {
             let weight = parseFloat(document.getElementById('calc-weight').value) || 0;
@@ -288,14 +290,30 @@ function initCalculator() {
             const wearCost = hours * wear;
             const baseCost = filamentCost + energyCost + wearCost + labor + shipping;
             const totalPrice = baseCost * (1 + (margin / 100));
+            const profit = totalPrice - baseCost;
+
+            if(margin < 50) { badgeText = 'Poco rentable'; badgeColor = 'var(--red)'; }
+            else if(margin < 150) { badgeText = 'Rentable'; badgeColor = 'var(--yellow)'; }
+            else { badgeText = 'Altamente rentable'; badgeColor = 'var(--green)'; }
 
             html = `
-                <div class="result-row"><span>Material (${weight.toFixed(0)}g)</span><span>€${filamentCost.toFixed(2)}</span></div>
-                <div class="result-row"><span>Energía & Amort.</span><span>€${(energyCost + wearCost).toFixed(2)}</span></div>
-                <div class="result-row"><span>Mano de obra</span><span>€${labor.toFixed(2)}</span></div>
-                <div class="result-row"><span>Envío</span><span>€${shipping.toFixed(2)}</span></div>
-                <div class="result-row"><span>Margen (${margin}%)</span><span>€${(totalPrice - baseCost).toFixed(2)}</span></div>
-                <div class="result-row total-row"><span>PRECIO VENTA</span><span>€${totalPrice.toFixed(2)}</span></div>
+                <div class="result-row"><span class="text-muted"><i class="fas fa-box"></i> Material (${weight.toFixed(0)}g)</span><strong style="font-size:0.9rem;">€${filamentCost.toFixed(2)}</strong></div>
+                <div class="result-row"><span class="text-muted"><i class="fas fa-bolt"></i> Energía & Amort.</span><strong style="font-size:0.9rem;">€${(energyCost + wearCost).toFixed(2)}</strong></div>
+                <div class="result-row"><span class="text-muted"><i class="fas fa-user-clock"></i> Mano de obra</span><strong style="font-size:0.9rem;">€${labor.toFixed(2)}</strong></div>
+                <div class="result-row"><span class="text-muted"><i class="fas fa-truck-loading"></i> Gastos Envío</span><strong style="font-size:0.9rem;">€${shipping.toFixed(2)}</strong></div>
+                <div style="margin: 1rem 0; padding: 0.75rem; background: var(--s2); border-radius: 8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:0.7rem; color:var(--text-muted);">Beneficio (${margin}%)</span>
+                        <strong style="color:${badgeColor}; font-size:1.1rem;">€${profit.toFixed(2)}</strong>
+                    </div>
+                    <div style="height:4px; background:var(--s3); border-radius:10px; overflow:hidden;">
+                        <div style="height:100%; width:${Math.min(margin/4, 100)}%; background:${badgeColor};"></div>
+                    </div>
+                </div>
+                <div style="text-align:center; margin-top:1rem;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:5px;">PRECIO DE VENTA SUGERIDO</div>
+                    <div style="font-size:2rem; font-weight:900; color:var(--green); letter-spacing:-1px;">€${totalPrice.toFixed(2)}</div>
+                </div>
             `;
         } else {
             const hours = parseFloat(document.getElementById('calc-paint-hours').value) || 0;
@@ -307,15 +325,88 @@ function initCalculator() {
             const total = (labor + mats) * factor;
 
             html = `
-                <div class="result-row"><span>Mano de obra (${hours}h)</span><span>€${labor.toFixed(2)}</span></div>
-                <div class="result-row"><span>Materiales</span><span>€${mats.toFixed(2)}</span></div>
-                <div class="result-row"><span>Factor Complejidad</span><span>x${factor}</span></div>
-                <div class="result-row total-row"><span>PRECIO VENTA</span><span>€${total.toFixed(2)}</span></div>
+                <div class="result-row"><span class="text-muted"><i class="fas fa-user-clock"></i> Mano de obra (${hours}h)</span><strong style="font-size:0.9rem;">€${labor.toFixed(2)}</strong></div>
+                <div class="result-row"><span class="text-muted"><i class="fas fa-palette"></i> Materiales</span><strong style="font-size:0.9rem;">€${mats.toFixed(2)}</strong></div>
+                <div class="result-row"><span class="text-muted"><i class="fas fa-chart-line"></i> Factor Complejidad</span><strong style="font-size:0.9rem;">x${factor}</strong></div>
+                <div style="text-align:center; margin-top:2rem;">
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:5px;">PRECIO DE VENTA SUGERIDO</div>
+                    <div style="font-size:2rem; font-weight:900; color:var(--green); letter-spacing:-1px;">€${total.toFixed(2)}</div>
+                </div>
             `;
         }
-        document.getElementById('calc-results').innerHTML = html;
+        
+        const resDiv = document.getElementById('calc-results');
+        if(resDiv) resDiv.innerHTML = html;
+        
+        const badge = document.getElementById('calc-badge-profit');
+        if(badge) {
+            badge.innerText = badgeText;
+            badge.style.color = badgeColor;
+            badge.style.background = `${badgeColor.replace('var(--', 'rgba(var(--').replace(')', ',0.1)')}`; // fallback to simpler logic
+            // Actually var colors are not easily converted to rgba in JS without computed styles. I'll just use fixed colors for the badge background
+            if(badgeColor.includes('green')) badge.style.background = 'rgba(34,197,94,0.1)';
+            else if(badgeColor.includes('yellow')) badge.style.background = 'rgba(234,179,8,0.1)';
+            else badge.style.background = 'rgba(239,68,68,0.1)';
+        }
     };
-}
+
+    window.saveCalcToDesign = () => {
+        const mode = document.getElementById('calc-mode').value;
+        const name = prompt("Nombre del nuevo diseño basado en este cálculo:");
+        if(!name) return;
+
+        let d = {
+            id: Date.now(),
+            name: name,
+            category: mode === '3d' ? 'Ninots' : 'Arte',
+            img: '',
+            version: '1.0',
+            license: 'Privada'
+        };
+
+        if(mode === '3d') {
+            const weight = parseFloat(document.getElementById('calc-weight').value) || 0;
+            const priceKg = parseFloat(document.getElementById('calc-price-kg').value) || 0;
+            const hours = parseFloat(document.getElementById('calc-hours').value) || 0;
+            const watts = parseFloat(document.getElementById('calc-watts').value) || 0;
+            const kwh = parseFloat(document.getElementById('calc-kwh').value) || 0;
+            const margin = parseFloat(document.getElementById('calc-margin').value) || 0;
+            const wear = parseFloat(document.getElementById('calc-wear').value) || 0;
+            const shipping = parseFloat(document.getElementById('calc-shipping').value) || 0;
+            const labor = parseFloat(document.getElementById('calc-labor').value) || 0;
+
+            const filamentCost = (weight / 1000) * priceKg;
+            const energyCost = (watts / 1000) * hours * kwh;
+            const wearCost = hours * wear;
+            const baseCost = filamentCost + energyCost + wearCost + labor + shipping;
+            const totalPrice = baseCost * (1 + (margin / 100));
+
+            d.price = totalPrice;
+            d.cost = baseCost;
+            d.weight = weight;
+            d.time = hours;
+        } else {
+            const hours = parseFloat(document.getElementById('calc-paint-hours').value) || 0;
+            const rate = parseFloat(document.getElementById('calc-paint-rate').value) || 0;
+            const mats = parseFloat(document.getElementById('calc-paint-mats').value) || 0;
+            const factor = parseFloat(document.getElementById('calc-paint-factor').value) || 1;
+            const total = (hours * rate + mats) * factor;
+
+            d.price = total;
+            d.cost = (hours * rate + mats);
+            d.weight = 0;
+            d.time = hours;
+        }
+
+        state.designs.push(d);
+        saveState();
+        alert("Diseño guardado en el catálogo.");
+        renderDesigns();
+    };
+
+    // Initial call to fill results
+    setTimeout(window.calculate, 500);
+};
 
 // Designs
 function renderDesigns() {

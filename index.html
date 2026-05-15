@@ -241,51 +241,87 @@
                         <option value="3d">Impresión 3D</option>
                         <option value="paint">Pintura / Arte</option>
                     </select>
-                    <button class="btn-primary" onclick="window.calculate()"><i class="fas fa-play"></i> Calcular</button>
                 </div>
             </div>
-            <div class="calc-layout">
-                <div class="card">
-                    <h3><i class="fas fa-sliders"></i> Parámetros</h3>
-                    <div class="calc-grid">
-                        <div class="input-group"><label>Peso de la pieza (g)</label><input type="number" id="calc-weight" value="200"></div>
-                        <div class="input-group"><label>Precio filamento (€/kg)</label><input type="number" id="calc-price-kg" value="22.00" step="0.01"></div>
-                        <div class="input-group"><label>Horas de impresión</label><input type="number" id="calc-hours" value="5" step="0.5"></div>
-                        <div class="input-group"><label>Potencia impresora (W)</label><input type="number" id="calc-watts" value="300"></div>
-                        <div class="input-group"><label>Coste electricidad (€/kWh)</label><input type="number" id="calc-kwh" value="0.18" step="0.01"></div>
-                        <div class="input-group"><label>Margen de beneficio (%)</label><input type="number" id="calc-margin" value="250"></div>
-                        <div class="input-group"><label>Amortización/hora (€)</label><input type="number" id="calc-wear" value="0.10" step="0.01"></div>
-                        <div class="input-group"><label>Mano de obra (€)</label><input type="number" id="calc-labor" value="0" step="0.5"></div>
-                        <div class="input-group"><label>Envío (€)</label><input type="number" id="calc-shipping" value="0" step="0.5"></div>
-                        <div class="input-group"><label>Escala (%)</label><input type="number" id="calc-scale" value="100"></div>
-                        <div class="input-group"><label>Relleno (%)</label><input type="number" id="calc-infill" value="15"></div>
-                        <div class="input-group"><label>Precio en tienda (€, para comparar)</label><input type="number" id="calc-store" value="0" step="0.5"></div>
-                        <div class="input-group">
-                            <label>Boquilla</label>
-                            <select id="calc-nozzle">
-                                <option value="0.4">0.4mm (Estándar)</option>
-                                <option value="0.6">0.6mm (Rápida)</option>
-                                <option value="0.2">0.2mm (Detalle)</option>
-                            </select>
+            
+            <div class="calc-layout" id="calc-container">
+                <!-- 3D PRINTING PARAMS -->
+                <div class="card" id="calc-3d-params">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+                        <!-- Group 1: Material -->
+                        <div>
+                            <h4 style="font-size:0.75rem; color:var(--accent); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.05em;"><i class="fas fa-box-open"></i> Material</h4>
+                            <div class="input-group mb-2"><label>Peso pieza (g)</label><input type="number" id="calc-weight" value="200" oninput="window.calculate()"></div>
+                            <div class="input-group mb-2"><label>Precio filamento (€/kg)</label><input type="number" id="calc-price-kg" value="22.00" step="0.01" oninput="window.calculate()"></div>
+                            <div class="input-group mb-2">
+                                <label>Escala (%)</label>
+                                <input type="number" id="calc-scale" value="100" oninput="window.calculate()">
+                                <small class="text-muted" style="font-size:0.6rem;">Afecta peso y tiempo cúbicamente</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Group 2: Printer -->
+                        <div>
+                            <h4 style="font-size:0.75rem; color:var(--blue); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.05em;"><i class="fas fa-print"></i> Impresora</h4>
+                            <div class="input-group mb-2"><label>Horas impresión</label><input type="number" id="calc-hours" value="5" step="0.5" oninput="window.calculate()"></div>
+                            <div class="input-group mb-2"><label>Potencia (W)</label><input type="number" id="calc-watts" value="300" oninput="window.calculate()"></div>
+                            <div class="input-group mb-2"><label>Coste Luz (€/kWh)</label><input type="number" id="calc-kwh" value="0.18" step="0.01" oninput="window.calculate()"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:1.5rem; padding-top:1.5rem; border-top:1px dashed var(--border);">
+                        <!-- Group 3: Business -->
+                        <div>
+                            <h4 style="font-size:0.75rem; color:var(--green); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.05em;"><i class="fas fa-briefcase"></i> Negocio</h4>
+                            <div class="input-group mb-2"><label>Margen (%)</label><input type="number" id="calc-margin" value="250" oninput="window.calculate()"></div>
+                            <div class="input-group mb-2"><label>Mano de obra (€)</label><input type="number" id="calc-labor" value="0" step="0.5" oninput="window.calculate()"></div>
+                            <div class="input-group mb-2"><label>Amortización/h (€)</label><input type="number" id="calc-wear" value="0.10" step="0.01" oninput="window.calculate()"></div>
+                        </div>
+                        
+                        <!-- Group 4: Others -->
+                        <div>
+                            <h4 style="font-size:0.75rem; color:var(--purple); margin-bottom:0.75rem; text-transform:uppercase; letter-spacing:0.05em;"><i class="fas fa-truck"></i> Otros</h4>
+                            <div class="input-group mb-2"><label>Envío (€)</label><input type="number" id="calc-shipping" value="0" step="0.5" oninput="window.calculate()"></div>
+                            <div class="input-group mb-2"><label>Precio Mercado (€)</label><input type="number" id="calc-store" value="0" step="0.5" oninput="window.calculate()"></div>
+                            <div class="input-group mb-2">
+                                <label>Boquilla</label>
+                                <select id="calc-nozzle" onchange="window.calculate()">
+                                    <option value="0.4">0.4mm (Estándar)</option>
+                                    <option value="0.6">0.6mm (Rápida)</option>
+                                    <option value="0.2">0.2mm (Detalle)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- PAINTING PARAMS -->
                 <div class="card" id="calc-paint-params" style="display:none;">
-                    <h3><i class="fas fa-palette"></i> Parámetros de Pintura</h3>
-                    <div class="calc-grid">
-                        <div class="input-group"><label>Horas de trabajo</label><input type="number" id="calc-paint-hours" value="2"></div>
-                        <div class="input-group"><label>Precio/hora (€)</label><input type="number" id="calc-paint-rate" value="15"></div>
-                        <div class="input-group"><label>Materiales (pintura, etc) (€)</label><input type="number" id="calc-paint-mats" value="5"></div>
-                        <div class="input-group"><label>Complejidad (x Factor)</label><input type="number" id="calc-paint-factor" value="1.2" step="0.1"></div>
+                    <h3 style="margin-bottom:1.5rem;"><i class="fas fa-palette"></i> Parámetros de Pintura</h3>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                        <div class="input-group"><label>Horas trabajo</label><input type="number" id="calc-paint-hours" value="2" oninput="window.calculate()"></div>
+                        <div class="input-group"><label>Precio/hora (€)</label><input type="number" id="calc-paint-rate" value="15" oninput="window.calculate()"></div>
+                        <div class="input-group"><label>Materiales (€)</label><input type="number" id="calc-paint-mats" value="5" oninput="window.calculate()"></div>
+                        <div class="input-group"><label>Factor Complejidad</label><input type="number" id="calc-paint-factor" value="1.2" step="0.1" oninput="window.calculate()"></div>
                     </div>
                 </div>
-                <div class="card" style="min-width:320px;">
-                    <h3><i class="fas fa-chart-pie"></i> Resultado</h3>
+
+                <!-- RESULTS CARD -->
+                <div class="card" style="min-width:340px; background:linear-gradient(145deg, var(--s1), var(--s2)); border:1px solid var(--border-light);">
+                    <h3 style="margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center;">
+                        <span><i class="fas fa-receipt"></i> Análisis de Precio</span>
+                        <span id="calc-badge-profit" style="font-size:0.65rem; background:rgba(34,197,94,0.1); color:var(--green); padding:3px 8px; border-radius:50px; border:1px solid rgba(34,197,94,0.2);">Altamente Rentable</span>
+                    </h3>
+                    
                     <div class="calc-results" id="calc-results">
-                        <p class="text-muted" style="font-size:0.9rem;">Introduce los parámetros y pulsa Calcular.</p>
+                        <!-- Filled by JS -->
                     </div>
-                    <button class="btn-primary" onclick="window.calculate()" style="width:100%;margin-top:1rem;justify-content:center;"><i class="fas fa-play"></i> Calcular Precio</button>
+
+                    <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border);">
+                        <button class="btn-primary" style="width:100%; justify-content:center; padding:12px; font-weight:700;" onclick="window.saveCalcToDesign()">
+                            <i class="fas fa-save"></i> Crear Diseño desde este cálculo
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
