@@ -193,7 +193,9 @@ function initTabs() {
 // Dashboard Logic
 function renderDashboard() {
     const dateEl = document.getElementById('dash-date');
-    if(dateEl) dateEl.innerText = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    if(dateEl) {
+        dateEl.innerText = `Actualizado: ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} a las ${new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+    }
 
     let balance = 0;
     let income = 0;
@@ -204,52 +206,214 @@ function renderDashboard() {
         else expenses += f.amount;
     });
     
-    document.getElementById('dash-balance').innerText = `€${balance.toFixed(2)}`;
-    document.getElementById('dash-projects').innerText = state.projects.length;
-    document.getElementById('dash-designs').innerText = state.designs.length;
-    document.getElementById('dash-clients').innerText = state.clients.length;
+    // Core KPIs
+    const balanceEl = document.getElementById('dash-kpi-balance');
+    if(balanceEl) balanceEl.innerText = `€${balance.toFixed(2)}`;
 
-    // Advanced Stats
-    document.getElementById('stats-revenue').innerText = `€${income.toFixed(2)}`;
-    document.getElementById('stats-expenses').innerText = `€${expenses.toFixed(2)}`;
-    document.getElementById('stats-profit').innerText = `€${(income - expenses).toFixed(2)}`;
-    
-    const confirmed = state.projects.filter(p => p.status !== 'draft').length;
-    const drafts = state.projects.filter(p => p.status === 'draft').length;
-    const conv = confirmed > 0 ? (confirmed / (confirmed + drafts)) * 100 : 0;
-    document.getElementById('stats-conv').innerText = `${conv.toFixed(1)}%`;
+    const activeProj = state.projects.filter(p => p.status === 'pending' || p.status === 'in_progress').length;
+    const projEl = document.getElementById('dash-kpi-projects');
+    if(projEl) projEl.innerText = activeProj;
 
-    // Kanban Summary
-    const pending = state.projects.filter(p => p.status === 'pending').length;
-    const progress = state.projects.filter(p => p.status === 'in_progress').length;
-    const done = state.projects.filter(p => p.status === 'done').length;
-    const total = state.projects.length || 1;
+    const designsEl = document.getElementById('dash-kpi-designs');
+    if(designsEl) designsEl.innerText = state.designs.length;
 
-    document.getElementById('dash-pending').innerText = pending;
-    document.getElementById('dash-progress').innerText = progress;
-    document.getElementById('dash-done').innerText = done;
+    // Average Margin KPI
+    let totalMargin = 0;
+    let validDesigns = 0;
+    state.designs.forEach(d => {
+        if (d.price > 0 && d.cost > 0) {
+            totalMargin += ((d.price - d.cost) / d.cost) * 100;
+            validDesigns++;
+        }
+    });
+    const avgMargin = validDesigns > 0 ? (totalMargin / validDesigns) : 0;
+    const marginEl = document.getElementById('dash-kpi-margin');
+    if(marginEl) marginEl.innerText = `${avgMargin.toFixed(0)}%`;
 
-    document.getElementById('dash-kanban-bar').innerHTML = `
-        <div class="kb-seg" style="width: ${(pending/total)*100}%; background: var(--yellow)"></div>
-        <div class="kb-seg" style="width: ${(progress/total)*100}%; background: var(--blue)"></div>
-        <div class="kb-seg" style="width: ${(done/total)*100}%; background: var(--green)"></div>
-    `;
+    // 1. Chart.js Render: Salud del Negocio (Income vs Expenses by Date)
+    const financeByDate = {};
+    state.finance.forEach(f => {
+        if (!financeByDate[f.date]) {
+            financeByDate[f.date] = { income: 0, expense: 0 };
+        }
+        if (f.type === 'income') {
+            financeByDate[f.date].income += f.amount;
+        } else {
+            financeByDate[f.date].expense += f.amount;
+        }
+    });
+    const sortedDates = Object.keys(financeByDate).sort();
+    let labels = sortedDates.slice(-7); // Last 7 active days
+    let incomeData = labels.map(d => financeByDate[d].income);
+    let expenseData = labels.map(d => financeByDate[d].expense);
 
-    // Recent Transactions
+    if (labels.length === 0) {
+        labels = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+        incomeData = [0, 0, 0, 0, 0, 0, 0];
+        expenseData = [0, 0, 0, 0, 0, 0, 0];
+    }
+
+    const ctx = document.getElementById('businessChart');
+    if (ctx && typeof Chart !== 'undefined') {
+        if (window.businessChartInstance) {
+            window.businessChartInstance.destroy();
+        }
+        window.businessChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Ingresos',
+                        data: incomeData,
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.03)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#22c55e',
+                        pointBorderColor: 'transparent'
+                    },
+                    {
+                        label: 'Gastos',
+                        data: expenseData,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.03)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: 'transparent'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        padding: 10,
+                        backgroundColor: '#16161f',
+                        titleColor: '#f1f5f9',
+                        bodyColor: '#64748b',
+                        borderColor: 'rgba(255,255,255,0.08)',
+                        borderWidth: 1,
+                        bodyFont: {
+                            family: 'Outfit, sans-serif'
+                        },
+                        titleFont: {
+                            family: 'Outfit, sans-serif',
+                            weight: 'bold'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            font: {
+                                family: 'Outfit, sans-serif',
+                                size: 9
+                            }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.03)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#64748b',
+                            font: {
+                                family: 'Outfit, sans-serif',
+                                size: 9
+                            },
+                            callback: function(value) {
+                                return '€' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Alertas de Inventario
+    const lowStock = state.inventory.filter(i => (i.current / i.weight) < 0.35);
+    const alertDiv = document.getElementById('dash-inventory-alerts');
+    if (alertDiv) {
+        if (lowStock.length > 0) {
+            alertDiv.innerHTML = lowStock.map(i => `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.12); padding:8px 10px; border-radius:6px; font-size:0.7rem;">
+                    <span style="display:flex; align-items:center; gap:6px;">
+                        <span style="width:8px; height:8px; border-radius:50%; background:${i.hex || 'var(--accent)'}; border:1px solid rgba(255,255,255,0.2);"></span>
+                        <strong>${i.brand} ${i.color}</strong>
+                    </span>
+                    <span style="color:var(--red); font-weight:700;">Quedan ${i.current}g</span>
+                </div>
+            `).join('');
+        } else {
+            alertDiv.innerHTML = `
+                <div style="display:flex; justify-content:center; align-items:center; background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.12); padding:8px 10px; border-radius:6px; font-size:0.7rem; color:var(--green); font-weight:600; text-align:center; width:100%;">
+                    <i class="fas fa-check-circle" style="margin-right:6px;"></i> Filamento óptimo (>35% stock)
+                </div>
+            `;
+        }
+    }
+
+    // 3. Más Rentables (Top 2 Designs by Profit)
+    const sortedByProfit = [...state.designs]
+        .map(d => {
+            const profit = d.price - (d.cost || 0);
+            const margin = d.price > 0 && d.cost > 0 ? Math.round(((d.price - d.cost) / d.cost) * 100) : 0;
+            return { ...d, profit, margin };
+        })
+        .sort((a, b) => b.profit - a.profit)
+        .slice(0, 2);
+
+    const sellersDiv = document.getElementById('dash-best-sellers');
+    if (sellersDiv) {
+        sellersDiv.innerHTML = sortedByProfit.map(d => `
+            <div style="background:var(--s2); border:1px solid var(--border); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+                <div>
+                    <h4 style="font-size:0.75rem; margin:0 0 2px 0; font-weight:600; color:var(--text-1);">${d.name}</h4>
+                    <small class="text-muted" style="font-size:0.6rem;"><span style="color:var(--green); font-weight:700;">Margen: ${d.margin}%</span> · Coste: €${d.cost?.toFixed(2) || '0.00'}</small>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:0.8rem; font-weight:800; color:var(--green);">€${d.price.toFixed(2)}</div>
+                    <div style="font-size:0.55rem; color:var(--text-muted);">+€${d.profit.toFixed(2)} unit.</div>
+                </div>
+            </div>
+        `).join('') || '<p class="text-muted" style="font-size:0.7rem; text-align:center; padding:10px;">Cargando catálogo...</p>';
+    }
+
+    // 4. Actividad Reciente (Recent Transactions)
     const dashList = document.getElementById('dash-finance-list');
     const recentFin = state.finance.slice(-3).reverse();
     if(dashList) {
         dashList.innerHTML = recentFin.length ? recentFin.map(f => `
-            <li class="order-item">
+            <li class="order-item" style="padding:6px 10px;">
                 <div class="order-info">
                     <strong>${f.concept}</strong>
                     <span>${f.date}</span>
                 </div>
-                <span style="font-weight:700; color: ${f.type === 'income' ? 'var(--green)' : 'var(--red)'}">
+                <span style="font-weight:700; color: ${f.type === 'income' ? 'var(--green)' : 'var(--red)'}; font-size:0.75rem;">
                     ${f.type === 'income' ? '+' : '-'}€${f.amount.toFixed(2)}
                 </span>
             </li>
-        `).join('') : '<li class="order-item text-muted" style="justify-content:center;">Sin transacciones</li>';
+        `).join('') : '<li class="order-item text-muted" style="justify-content:center; font-size:0.7rem;">Sin transacciones</li>';
     }
 }
 

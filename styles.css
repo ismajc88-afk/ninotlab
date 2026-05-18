@@ -443,7 +443,7 @@ header{
     .designs-grid { grid-template-columns: 1fr; }
     .design-img { height: 100px; }
     .calc-grid { grid-template-columns: 1fr; }
-    .dash-grid { grid-template-columns: 1fr; }
+    .dash-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
     .inventory-grid { grid-template-columns: 1fr; }
     /* Clients: stack directory + detail */
     #clients-view > div:last-of-type[style*="grid-template-columns"] {
